@@ -1,0 +1,5 @@
+[09-02-2026 04:58:28] [fabza] error: File: C:\xampp\htdocs\proyecto\api\index.php - line: 22 - Message: require_once(models/ObjetoImagenModel.php): Failed to open stream: No such file or directory
+ [09-02-2026 04:59:29] [fabza] error: File: C:\xampp\htdocs\proyecto\api\index.php - line: 22 - Message: require_once(models/ObjetoImagenModel.php): Failed to open stream: No such file or directory
+ [09-02-2026 05:08:05] [fabza] error: File: C:\xampp\htdocs\proyecto\api\index.php - line: 22 - Message: require_once(C:\xampp\htdocs\proyecto\api/models/ObjetoImagenModel.php): Failed to open stream: No such file or directory
+ [09-02-2026 05:19:39] [fabza] error: File: C:\xampp\htdocs\proyecto\api\models\SubastaModel.php - line: 28 - Message: Attempt to read property "nombreImagen" on string
+ 
