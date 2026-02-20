@@ -1,9 +1,0 @@
-[06-02-2026 04:11:51] [fabza] error: File: C:\xampp\htdocs\proyecto\api\index.php - line: 36 - Message: require_once(controllers/ActorController.php): Failed to open stream: No such file or directory
- [06-02-2026 04:14:42] [fabza] error: File: C:\xampp\htdocs\proyecto\api\index.php - line: 36 - Message: require_once(controllers/ActorController.php): Failed to open stream: No such file or directory
- [06-02-2026 04:14:44] [fabza] error: File: C:\xampp\htdocs\proyecto\api\index.php - line: 36 - Message: require_once(controllers/ActorController.php): Failed to open stream: No such file or directory
- [06-02-2026 04:16:15] [fabza] error: File: C:\xampp\htdocs\proyecto\api\controllers\core\MySqlConnect.php - line: 29 - Message: Unknown database 'movie_rental'
- [06-02-2026 04:18:29] [fabza] error: File: C:\xampp\htdocs\proyecto\api\controllers\core\MySqlConnect.php - line: 29 - Message: Unknown database 'subastabd'
- [06-02-2026 04:19:24] [fabza] error: File: C:\xampp\htdocs\proyecto\api\controllers\core\MySqlConnect.php - line: 29 - Message: Unknown database 'subastabd'
- [06-02-2026 04:21:22] [fabza] error: File: C:\xampp\htdocs\proyecto\api\controllers\core\MySqlConnect.php - line: 29 - Message: mysqli::__construct(): php_network_getaddresses: getaddrinfo for 3307 failed: No such host is known. 
- [06-02-2026 04:21:37] [fabza] error: File: C:\xampp\htdocs\proyecto\api\controllers\core\MySqlConnect.php - line: 29 - Message: Unknown database 'subastabd'
- 

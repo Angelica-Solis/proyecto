@@ -1,0 +1,46 @@
+# ==========================================
+# CONFIGURACIÓN UNIFICADA (RAÍZ)
+# ==========================================
+
+# --- Archivos del Sistema y Editores ---
+.DS_Store
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# --- BACKEND (Carpeta: api) ---
+api/vendor/
+api/composer.lock
+# Configuración sensible (base de datos, claves, etc.)
+api/.env
+api/.env.local
+api/.env.*.local
+api/*.env
+#config.php
+api/config.php
+# Cachés y logs
+api/*.log
+# Si tenías más reglas específicas en el de API, añádelas aquí con "api/" delante
+
+# --- FRONTEND (Carpeta: app) ---
+# Logs de Node/Package Managers
+app/logs
+app/*.log
+app/npm-debug.log*
+app/yarn-debug.log*
+app/yarn-error.log*
+app/pnpm-debug.log*
+app/lerna-debug.log*
+
+# Dependencias y Build
+app/node_modules/
+app/dist/
+app/dist-ssr/
+app/*.local
+
+# ==========================================

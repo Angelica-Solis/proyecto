@@ -1,9 +1,0 @@
-[11-02-2026 00:45:19] [maria] error: File: C:\xampp\htdocs\proyecto\api\models\UsuarioModel.php - line: 59 - Message: Undefined property: stdClass::$idUser
- [11-02-2026 00:53:18] [maria] error: File: C:\xampp\htdocs\proyecto\api\controllers\core\MySqlConnect.php - line: 46 - Message: Column 'id' in where clause is ambiguous
- [11-02-2026 01:58:12] [maria] error: File: C:\xampp\htdocs\proyecto\api\controllers\core\MySqlConnect.php - line: 46 - Message: Unknown column 'idEstado' in 'field list'
- [11-02-2026 01:58:48] [maria] error: File: C:\xampp\htdocs\proyecto\api\models\ObjetoModel.php - line: 80 - Message: Undefined property: stdClass::$idEstado
- [11-02-2026 01:59:36] [maria] error: File: C:\xampp\htdocs\proyecto\api\models\ObjetoModel.php - line: 80 - Message: Undefined property: stdClass::$idEstado
- [11-02-2026 02:00:50] [maria] error: File: C:\xampp\htdocs\proyecto\api\models\ObjetoModel.php - line: 80 - Message: Undefined property: stdClass::$idEstado
- [11-02-2026 02:01:55] [maria] error: File: C:\xampp\htdocs\proyecto\api\models\ObjetoModel.php - line: 82 - Message: Undefined property: stdClass::$idUsuario
- [11-02-2026 02:14:45] [maria] error: File: C:\xampp\htdocs\proyecto\api\models\ObjetoModel.php - line: 80 - Message: Undefined property: stdClass::$idEstado
- 
