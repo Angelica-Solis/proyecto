@@ -15,7 +15,8 @@ import {
   ChevronDown,
   Clapperboard,
   User,
-  ShoppingBasket
+  ShoppingBasket,
+  UsersRound
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -45,10 +46,10 @@ const navItems = [
 ];
 
 const mantItems = [
- {
-      title: "Películas",
-      href: "movie/table",
-      icon: <Wrench className="h-4 w-4" />,
+  {
+      title: "Listar Usuarios",
+      href: "/user/table",
+      icon: <UsersRound className="h-4 w-4" />,
     },
     {
       title: "Alquileres",
@@ -115,7 +116,7 @@ const userItems = [
             {/* Mantenimientos */}
             <MenubarMenu>
               <MenubarTrigger className="text-white font-medium flex items-center gap-1 hover:text-secondary transition">
-                <Layers className="h-4 w-4" /> Mantenimientos
+                <Layers className="h-4 w-4" /> Usuarios
                 <ChevronDown className="h-3 w-3" />
               </MenubarTrigger>
               <MenubarContent className="bg-primary/0 backdrop-blur-md border-white/10">

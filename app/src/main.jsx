@@ -5,9 +5,10 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { Layout } from './components/Layout/Layout'
 import { Home } from './components/Home/Home'
 import { PageNotFound } from './components/Home/PageNotFound'
-import TableMovies from './components/Movie/TableMovies'
-import { ListMovies } from './components/Movie/ListMovies'
-import { DetailMovie } from './components/Movie/DetailMovie'
+import TableMovies from './components/Subasta/TableMovies'
+import { ListMovies } from './components/Subasta/ListMovies'
+import { DetailMovie } from './components/Subasta/DetailMovie'
+import { UserTable } from './components/User/UserTable' 
 
 const rutas = createBrowserRouter([
   {
@@ -21,7 +22,9 @@ const rutas = createBrowserRouter([
        //Rutas componentes
       {path:"movie/table", element: <TableMovies/>},
       {path:"movie", element: <ListMovies/>},
-      {path:"movie/detail/:id", element: <DetailMovie />}
+      {path:"movie/detail/:id", element: <DetailMovie />},
+      //Ruta para listar usuarios
+      {path:"user/table", element: <UserTable />},
 
     ]
   }

@@ -2,8 +2,9 @@ import axios from 'axios';
 const BASE_URL = import.meta.env.VITE_BASE_URL + 'user';
 
 class UserService {
+  //trae el nombre del usuario, rol y estado del usuario 
   getUsers() {
-    return axios.get(BASE_URL);
+    return axios.get(BASE_URL + '/RolEstadoUsuarios/');
   }
   getUserById(UserId) {
     return axios.get(BASE_URL + '/' + UserId);

@@ -21,11 +21,8 @@ api/.env
 api/.env.local
 api/.env.*.local
 api/*.env
-#config.php
-api/config.php
 # Cachés y logs
 api/*.log
-# Si tenías más reglas específicas en el de API, añádelas aquí con "api/" delante
 
 # --- FRONTEND (Carpeta: app) ---
 # Logs de Node/Package Managers
