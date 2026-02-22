@@ -86,7 +86,7 @@ const userItems = [
           className="flex items-center gap-2 text-xl font-semibold tracking-wide hover:opacity-90 transition"
         >
           <Clapperboard className="h-6 w-6" />
-          <span className="hidden sm:inline">MoviesApp</span>
+          <span className="hidden sm:inline">SubastaApp</span>
         </Link>
 
         {/* -------- Menú escritorio -------- */}
@@ -178,7 +178,7 @@ const userItems = [
               <nav className="mt-8 px-4 space-y-6">
                 <div>
                   <Link to="/" className="flex items-center gap-2 text-lg font-semibold">
-                    <Clapperboard /> MoviesApp
+                    <Clapperboard /> SubastaApp
                   </Link>
                 </div>
 

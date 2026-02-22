@@ -9,6 +9,7 @@ import TableMovies from './components/Subasta/TableMovies'
 import { ListMovies } from './components/Subasta/ListMovies'
 import { DetailMovie } from './components/Subasta/DetailMovie'
 import { UserTable } from './components/User/UserTable' 
+import { UserDetail } from './components/User/UserDetail'
 
 const rutas = createBrowserRouter([
   {
@@ -23,9 +24,9 @@ const rutas = createBrowserRouter([
       {path:"movie/table", element: <TableMovies/>},
       {path:"movie", element: <ListMovies/>},
       {path:"movie/detail/:id", element: <DetailMovie />},
-      //Ruta para listar usuarios
+      //Ruta para listar y detallar usuarios
       {path:"user/table", element: <UserTable />},
-
+      { path: "user/detail/:id", element: <UserDetail /> },
     ]
   }
 ])

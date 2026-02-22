@@ -21,6 +21,9 @@ class UserService {
   loginUser(User) {
     return axios.post(BASE_URL + '/login/', JSON.stringify(User));
   }
+getUserDetail(id) {
+  return axios.get(BASE_URL + '/DetalleUsuarios/' + id);
+}
 }
 
 export default new UserService();
