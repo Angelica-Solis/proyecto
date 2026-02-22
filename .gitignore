@@ -23,7 +23,7 @@ api/.env.*.local
 api/*.env
 # Cachés y logs
 api/*.log
-
+api/Log
 # --- FRONTEND (Carpeta: app) ---
 # Logs de Node/Package Managers
 app/logs
