@@ -5,7 +5,6 @@ import {
   Film,
   ChartArea,
   Filter,
-  Wrench,
   LogIn,
   UserPlus,
   LogOut,
@@ -15,7 +14,6 @@ import {
   ChevronDown,
   Clapperboard,
   User,
-  ShoppingBasket,
   UsersRound
 } from "lucide-react";
 
@@ -52,9 +50,9 @@ const mantItems = [
       icon: <UsersRound className="h-4 w-4" />,
     },
     {
-      title: "Alquileres",
-      href: "rental",
-      icon: <ShoppingBasket className="h-4 w-4" />,
+      title: "Listado de Objetos",
+      href: "objeto/listado",
+      icon: <car-front className="h-4 w-4" />,
     },
     {
       title: "Gráfico de Alquileres",
