@@ -13,6 +13,7 @@ import { UserTable } from './components/User/UserTable'
 import { UserDetail } from './components/User/UserDetail'
 
 import { ObjetoTable } from './components/Objetos/ListadoObjetos'
+import { ObjetoDetalle } from './components/Objetos/DetalleObjeto'
 
 
 const rutas = createBrowserRouter([
@@ -33,8 +34,8 @@ const rutas = createBrowserRouter([
 
       { path: "user/detail/:id", element: <UserDetail /> },
 
-      {path: "objeto/listado", element: <ObjetoTable />}
-
+      {path: "objeto/listado", element: <ObjetoTable />},
+      {path: "objeto/detalle/:id", element: <ObjetoDetalle/>},
     ]
   }
 ])

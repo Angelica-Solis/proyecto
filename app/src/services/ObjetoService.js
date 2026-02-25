@@ -8,8 +8,8 @@ class ObjetoService {
     return axios.get(BASE_URL + '/ListadoObjetos/');
   }
 
-  getDetalleObjeto(){
-    return axios.get(BASE_URL + '/DetalleObjeto/');
+  getDetalleObjeto(id){
+    return axios.get(BASE_URL + '/DetalleObjeto/'+ id);
   }
   
 };

@@ -57,7 +57,7 @@ useEffect(() => {
                 <TableCell>{objetoo.duenno}</TableCell>
                 <TableCell className="text-right">
                 <Button size="icon" variant="ghost" asChild>
-                    <Link to={`/objeto/detail/${objetoo.id}`}>
+                    <Link to={`/objeto/detalle/${objetoo.id}`}>
                     <Info className="h-4 w-4" />
                     </Link>
                 </Button>

@@ -78,37 +78,41 @@ class ObjetoModel
                 //Condicion
                 $objeto->condicion = $this->getCondicion($objeto->idCondicion);
                 //Estado
-                $objeto->estado = $this->getEstado($objeto->id);
+                $objeto->estado = $this->getEstado($objeto->idEstadoObjeto);
                 //Duenno
                 $duenno = $usuarioM->get($objeto->id);
                 $objeto->duenno = $duenno ? $duenno->nombreUsuario : 'No esta definido';
-                            // Unset funciona para que elimine una variable o propiedad de un objeto en tiempo de ejecucion
-                            unset($objeto->idCondicion, $objeto->idVendedor, $objeto->idEstadoObjeto, $objeto->id);
+                // Unset funciona para que elimine una variable o propiedad de un objeto en tiempo de ejecucion
+                unset($objeto->idCondicion, $objeto->idVendedor, $objeto->idEstadoObjeto);
             }
-        }else{
+        } else {
             $vResultado = [];
         }
         return $vResultado;
     }
- //Estado para el listado de objetos
+    //Estado para el listado de objetos
     public function getEstado($idEstado)
     {
-        $vSql = "SELECT descripcionEstado FROM estado_objeto  WHERE id=$idEstado;";
+        $vSql = "SELECT descripcionEstado 
+            FROM estado_objeto  
+            WHERE id=$idEstado;";
         $res = $this->enlace->executeSQL($vSql);
-        return $res;
+
+        return (!empty($res)) ? $res[0]->descripcionEstado : null;
     }
 
 
     //Listado de objetos con detalle 
 
-    public function DetalleObjeto($id){
+    public function DetalleObjeto($id)
+    {
         $imgM =  new ObjetoImagenModel();
         $usuarioM = new UsuarioModel();
 
-        $vSql= "SELECT * FROM objeto WHERE id=$id;";
+        $vSql = "SELECT * FROM objeto WHERE id=$id;";
         $vResultado = $this->enlace->executeSQL($vSql);
 
-        if(!empty($vResultado) && is_array($vResultado)){
+        if (!empty($vResultado) && is_array($vResultado)) {
             $objeto = $vResultado[0];
 
             $objeto->imagenes = $imgM->getImagenesPorObjeto($objeto->id);
@@ -117,7 +121,7 @@ class ObjetoModel
 
             $objeto->condicion = $this->getCondicion($objeto->idCondicion);
 
-            $objeto->estado = $this->getEstadoSubasta($objeto->id);
+            $objeto->estado = $this->getEstado($objeto->idEstadoObjeto);
 
             $duenno = $usuarioM->get($objeto->idVendedor);
             $objeto->propietario = $duenno ? $duenno->nombreUsuario : "No fue definido";
@@ -131,31 +135,33 @@ class ObjetoModel
         }
         return null;
     }
-        //Historial de subastas por objeto.
-        public function getSubastasPorObjeto($idObjeto){
-            $vSql = "SELECT id, fechaInicio, fechaCierre, idEstadoSubasta
+    //Historial de subastas por objeto.
+    public function getSubastasPorObjeto($idObjeto)
+    {
+        $vSql = "SELECT  idObjeto, fechaInicio, fechaCierre, idEstadoSubasta
             FROM subasta
-            WHERE id = $idObjeto;";
+            WHERE idObjeto = $idObjeto;";
 
-            $vResultado = $this->enlace->executeSQL($vSql);
+        $vResultado = $this->enlace->executeSQL($vSql);
 
-            if(!empty($vResultado) && is_array($vResultado)){
-                foreach($vResultado as $subasta){
-                    $subasta->estado = $this->getEstado($subasta->idEstadoSubasta);
-                    unset($subasta->idEstadoSubasta);
-                }
-                return $vResultado;
+        if (!empty($vResultado) && is_array($vResultado)) {
+            foreach ($vResultado as $subasta) {
+                $subasta->estado = $this->getEstadoSubasta($subasta->idEstadoSubasta);
+                unset($subasta->idEstadoSubasta);
             }
-            return [];
+            return $vResultado;
         }
+        return [];
+    }
 
-        public function getEstadoSubasta($idEstado){
-            $vSql= "SELECT descripcionEstado
+    public function getEstadoSubasta($idEstado)
+    {
+        $vSql = "SELECT descripcionEstado
             FROM estado_subasta
             WHERE id=$idEstado;";
 
-            $res = $this->enlace->executeSQL($vSql);
+        $res = $this->enlace->executeSQL($vSql);
 
-            return (!empty($res)) ? $res[0]->descripcionEstado : null;
-        }
+        return (!empty($res)) ? $res[0]->descripcionEstado : null;
+    }
 }
