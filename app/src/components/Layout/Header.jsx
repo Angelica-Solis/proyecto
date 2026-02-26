@@ -16,7 +16,9 @@ import {
   User,
   UsersRound,
   Gavel,
-  CarFront
+  CarFront,
+  Check,
+  ShieldCheck
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -37,11 +39,10 @@ export default function Header() {
   const userEmail = "Invitado";
 
 const navItems = [
-  { title: "Películas", href: "/movie", icon: <Film className="h-4 w-4" /> },
   {
-    title: "Filtrar Películas",
-    href: "/movie/filter",
-    icon: <Filter className="h-4 w-4" />,
+    title: "Ver Subastas",
+    href: "/subastas",
+    icon: <ShieldCheck className="h-4 w-4" />,
   },
 ];
 
@@ -92,10 +93,10 @@ const userItems = [
         {/* -------- Menú escritorio -------- */}
         <div className="hidden md:flex flex-1 justify-center">
           <Menubar className="w-auto bg-transparent border-none shadow-none space-x-6">
-            {/* Películas */}
+            {/* Subastas */}
             <MenubarMenu>
               <MenubarTrigger className="text-white font-medium flex items-center gap-1 hover:text-secondary transition">
-                <Film className="h-4 w-4" /> Películas
+                <Gavel className="h-4 w-4" /> Subastas
                 <ChevronDown className="h-3 w-3" />
               </MenubarTrigger>
               <MenubarContent className="bg-primary/0 backdrop-blur-md border-white/10">
