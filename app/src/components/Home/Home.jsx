@@ -1,45 +1,45 @@
-import ticketImg from "../../assets/ticket.jpg";
-
+import subastaImg from "../../assets/fondo subasta.jpg";
 
 export function Home() {
   return (
-    <div className="relative w-full h-screen flex items-center justify-center text-center overflow-hidden">
-      {/* Fondo */}
+    <div className="relative w-full h-screen flex items-center justify-center text-center overflow-hidden font-sans">
+      {/* Fondo con overlay de degradado para mejor legibilidad */}
       <div
-        className="absolute inset-0 -z-10"
+        className="absolute inset-0 -z-10 bg-black"
         style={{
-          backgroundImage: `url(${ticketImg})`,
+          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${subastaImg})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          filter: "brightness(0.5)",
         }}
       />
 
-      {/* Contenido principal */}
-      <div className="px-4 max-w-2xl text-white">
-        <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-4 drop-shadow-lg">
-          Alquiler de Películas
+      <div className="px-4 max-w-5xl text-white">
+        {/* TÍTULO: Usamos tracking-tighter y un font-black para impacto máximo */}
+        <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-4 drop-shadow-2xl leading-none italic uppercase">
+          EL GARAJE <br /> 
+          <span className="text-secondary">DE TUS SUEÑOS</span>
         </h1>
-        <p className="text-lg md:text-xl text-white/80 mb-6 drop-shadow">
-          Descubre y alquila tus películas favoritas por días.
+
+        {/* SUBTÍTULO: Tracking-widest y peso ligero para contraste elegante */}
+        <p className="text-sm md:text-xl text-white/80 mb-10 tracking-[0.2em] uppercase font-light max-w-2xl mx-auto">
+          Subastas exclusivas de los vehículos más extraordinarios del mundo.
         </p>
-        <div className="flex justify-center gap-4">
+        
+        <div className="flex flex-col md:flex-row justify-center gap-6">
           <a
-            href="/movies"
-            className="px-6 py-3 bg-primary text-white rounded-lg font-semibold shadow-lg hover:bg-primary/90 transition"
+            href="/subastas"
+            className="px-10 py-4 bg-primary text-white rounded-sm font-bold shadow-2xl hover:bg-red-700 transition-all duration-300 uppercase tracking-widest text-sm"
           >
-            Ver Catálogo
+            Explorar Lotes
           </a> 
           <a
-            href="/user/login"
-            className="px-6 py-3 bg-secondary text-white rounded-lg font-semibold shadow-lg hover:bg-secondary/90 transition"
+            href="/registro"
+            className="px-10 py-4 border-2 border-white text-white rounded-sm font-bold backdrop-blur-sm hover:bg-white hover:text-black transition-all duration-300 uppercase tracking-widest text-sm"
           >
-            Iniciar Sesión
+            Iniciar Sesión / Registrarse
           </a>
         </div>
       </div>
-
     </div>
   );
 }
-

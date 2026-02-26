@@ -14,7 +14,9 @@ import {
   ChevronDown,
   Clapperboard,
   User,
-  UsersRound
+  UsersRound,
+  Gavel,
+  CarFront
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +54,7 @@ const mantItems = [
     {
       title: "Listado de Objetos",
       href: "objeto/listado",
-      icon: <car-front className="h-4 w-4" />,
+      icon: <CarFront className="h-4 w-4" />,
     },
     {
       title: "Gráfico de Alquileres",
@@ -83,7 +85,7 @@ const userItems = [
           to="/"
           className="flex items-center gap-2 text-xl font-semibold tracking-wide hover:opacity-90 transition"
         >
-          <Clapperboard className="h-6 w-6" />
+          <Gavel className="h-6 w-6" />
           <span className="hidden sm:inline">SubastaApp</span>
         </Link>
 

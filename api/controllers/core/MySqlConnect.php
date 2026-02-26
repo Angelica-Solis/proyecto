@@ -26,7 +26,7 @@ class MySqlConnect {
 	 */
 	public function connect() {
 		try {
-			$this->link = new mysqli ( $this->host, $this->username, $this->password, $this->dbname);
+			$this->link = new mysqli ( $this->host, $this->username, $this->password, $this->dbname, 3307);
 			
 		} catch ( Exception $e ) {
 			handleException($e);
