@@ -71,9 +71,9 @@ export function SubastaTable() {
               data.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>
-                    {/* Imagen procesada desde el modelo */}
+                    {/* Imagen*/}
                     <img 
-                      src={`/assets/images/${item.imagen}`} 
+                      src={`http://127.0.0.1:81/proyecto/api/uploads/${item.imagen}`} 
                       alt={item.nombreObjeto}
                       className="h-12 w-12 rounded object-cover border" 
                     />
