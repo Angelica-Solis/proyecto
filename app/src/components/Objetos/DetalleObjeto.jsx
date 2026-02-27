@@ -41,9 +41,9 @@ export function ObjetoDetalle() {
 
 
     if (loading) return <LoadingGrid count={1} type="grid" />;
-    if (error) return <ErrorAlert title="Error al cargar películas" message={error} />;
+    if (error) return <ErrorAlert title="Error al cargar detalle del objeto" message={error} />;
     if (!data || data.data.length === 0)
-        return <EmptyState message="No se encontraron películas en esta tienda." />;
+        return <EmptyState message="No se encontraron detalles de objeto en este apartado." />;
 
     return (
         <div className="max-w-5xl mx-auto py-12 px-4 flex flex-col items-center">
