@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import objetooService from "@/services/ObjetoService"; //
+import { Info } from "lucide-react";
 
 
 export function ObjetoTable() {
@@ -52,9 +53,11 @@ export function ObjetoTable() {
                                 <TableCell className="font-medium">{objetoo.nombreObjeto}</TableCell>
                                 <TableCell>{objetoo.categorias}</TableCell>
 
-                                <Badge variant="outline">{objetoo.condicion}</Badge>
+                                    <TableCell>
+                                    <Badge variant="outline">{objetoo.condicion}</Badge>
+                                    </TableCell>
 
-                                <TableCell>{objetoo.duenno}</TableCell>
+                                    <TableCell>{objetoo.duenno}</TableCell>
                                 <TableCell className="text-right">
                                     <Button size="icon" variant="ghost" asChild>
                                         <Link to={`/objeto/detalle/${objetoo.id}`}>
