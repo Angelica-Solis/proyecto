@@ -108,7 +108,7 @@ export function SubastaDetalle() {
                                     <div>
                                         <span className="font-semibold">Precio Base:</span>
                                         <p className="text-muted-foreground">
-                                            {data.data.precioBase}
+                                            $ {data.data.precioBase}
                                         </p>
                                     </div>
                                 </div>

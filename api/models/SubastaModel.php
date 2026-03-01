@@ -23,7 +23,7 @@ class SubastaModel {
                 // Obtenemos solo la primera imagen para el listado
                 $vResultado[$i]->imagen = $datosObjeto->imagenes[0]->nombreImagen; 
                 
-                // 4. Campo calculado: Conteo de pujas (Método local simple)
+                // 4. Campo calculado: Conteo de pujas
                 $vResultado[$i]->cantidadPujas = $this->countPujas($vResultado[$i]->id);
             }
         }

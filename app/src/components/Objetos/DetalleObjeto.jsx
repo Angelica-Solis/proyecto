@@ -157,7 +157,7 @@ export function ObjetoDetalle() {
                                             <div key={index} className="text-muted-foreground border-l-2 border-primary pl-3">
 
                                                 <div>
-                                                    Indicador: {subasta.id}
+                                                    Subasta Nº {subasta.id}
                                                 </div>
 
                                                 <div>
