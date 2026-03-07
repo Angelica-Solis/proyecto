@@ -1,103 +1,119 @@
 import { useEffect, useState } from "react";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import pujaaService from "@/services/PujaService";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "../ui/button";
 
 export function PujaTable() {
-
     const { id } = useParams();
     const navigate = useNavigate();
-
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         pujaaService.historial(id)
-            .then((response) => {
-                setData(response.data.data);
-                setLoading(false);
-            })
-            .catch((error) => {
-                console.error("Error:", error);
-                setLoading(false);
-            });
+            .then((response) => { setData(response.data.data); setLoading(false); })
+            .catch((error) => { console.error("Error:", error); setLoading(false); });
     }, [id]);
 
-    if (loading)
-        return (
-            <div className="flex justify-center items-center h-40">
-                <span className="text-white/60 text-sm">
-                    Cargando historial...
-                </span>
-            </div>
-        );
-
     return (
-        <div className="max-w-3xl mx-auto px-6 py-10">
+        <div className="min-h-screen bg-[#080807] text-[#F5F0E8] p-10 font-sans">
 
-            {/* Título */}
-            <h1 className="text-2xl font-semibold text-white mb-1">
-                Historial de Pujas
-            </h1>
-            <p className="text-sm text-white/50 mb-6">
-                Registro de todas las ofertas realizadas
-            </p>
+            {/* Encabezado */}
+            <div className="mb-10">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="w-7 h-px bg-[#C9A84C]" />
+                    <span className="text-[#C9A84C] uppercase tracking-[0.4em] text-[12px] font-medium">
+                        Panel de Control
+                    </span>
+                </div>
+                <h1 className="text-4xl font-light tracking-tight leading-none">
+                    Historial de{" "}
+                    <em className="text-[#C9A84C] not-italic font-light">Pujas</em>
+                </h1>
+                <p className="text-[12px] font-light tracking-[0.25em] uppercase text-[#F5F0E8]/40 mt-3">
+                    Registro de todas las ofertas realizadas
+                </p>
+            </div>
 
             {/* Tabla */}
-            <div className="overflow-hidden border border-white/10">
+            <div className="border border-[#C9A84C]/20 bg-[#0E0D0B] overflow-hidden">
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-white/5 border-b border-white/10 hover:bg-white/5">
-                            <TableHead className="text-xs font-semibold text-white/60 uppercase tracking-wider py-3 px-4">
-                                Usuario
-                            </TableHead>
-                            <TableHead className="text-xs font-semibold text-white/60 uppercase tracking-wider py-3 px-4">
-                                Monto ofertado
-                            </TableHead>
-                            <TableHead className="text-xs font-semibold text-white/60 uppercase tracking-wider py-3 px-4">
-                                Fecha y hora
-                            </TableHead>
+                        <TableRow className="border-b border-[#C9A84C]/20 bg-[#C9A84C]/5 hover:bg-[#C9A84C]/5">
+                            {["Usuario", "Monto Ofertado", "Fecha y Hora"].map((h, i) => (
+                                <TableHead key={i} className="text-[#C9A84C] text-[11px] font-medium tracking-[0.35em] uppercase py-4 border-b border-[#C9A84C]/20">
+                                    {h}
+                                </TableHead>
+                            ))}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {data.length > 0 ? (
+                        {loading ? (
+                            <TableRow className="hover:bg-transparent border-0">
+                                <TableCell colSpan={3} className="py-16 text-center">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="w-7 h-7 rounded-full border-2 border-[#C9A84C]/20 border-t-[#C9A84C] animate-spin" />
+                                        <span className="text-[12px] tracking-[0.35em] uppercase text-[#F5F0E8]/40">
+                                            Cargando historial…
+                                        </span>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ) : data.length > 0 ? (
                             data.map((puja, index) => (
                                 <TableRow
                                     key={index}
-                                    className="border-b border-white/10 hover:bg-white/5 transition-colors duration-150">
-                                    <TableCell className="py-3 px-4 font-medium text-white">
-                                        {puja.nombreUsuario}
+                                    className={`
+                                        border-b border-[#C9A84C]/[0.07] transition-colors duration-200
+                                        hover:bg-[#C9A84C]/[0.06]
+                                        ${index % 2 !== 0 ? "bg-[#F5F0E8]/[0.03]" : "bg-transparent"}
+                                    `}
+                                >
+                                    <TableCell className="py-3">
+                                        <span className="text-base font-light italic text-[#F5F0E8]">
+                                            {puja.nombreUsuario}
+                                        </span>
                                     </TableCell>
-                                    <TableCell className="py-3 px-4 text-white">
-                                        ₡ {puja.monto}
+                                    <TableCell className="py-3">
+                                        <span className="inline-flex items-center justify-center px-2.5 py-0.5 border border-[#C9A84C]/25 bg-[#C9A84C]/[0.07] text-[#C9A84C] text-[13px] font-medium tracking-widest">
+                                            ₡ {puja.monto}
+                                        </span>
                                     </TableCell>
-                                    <TableCell className="py-3 px-4 text-sm text-white/60">
-                                        {new Date(puja.fechaHora).toLocaleString()}
+                                    <TableCell className="py-3">
+                                        <span className="text-[13px] font-light tracking-wide text-[#F5F0E8]/50">
+                                            {new Date(puja.fechaHora).toLocaleString()}
+                                        </span>
                                     </TableCell>
                                 </TableRow>
-                            ))) : (
-                            <TableRow>
-                                <TableCell colSpan={3} className="text-center py-10 text-sm text-white/40">
-                                    No hay pujas registradas
+                            ))
+                        ) : (
+                            <TableRow className="hover:bg-transparent border-0">
+                                <TableCell colSpan={3} className="py-16 text-center">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="w-2 h-2 border border-[#C9A84C]/50 rotate-45" />
+                                        <span className="text-[12px] tracking-[0.35em] uppercase text-[#F5F0E8]/40">
+                                            No hay pujas registradas
+                                        </span>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         )}
                     </TableBody>
                 </Table>
             </div>
-            {/* Botón de regresar */}
-            <div className="mt-6">
-                <Button variant="outline" onClick={() => navigate(-1)} className="flex items-center gap-2 border-white/20 text-white bg-transparent hover:bg-white/10 hover:text-white">
-                    <ArrowLeft className="w-4 h-4" />Regresar</Button>
+
+            {/* Boton regresar */}
+            <div className="mt-8 flex">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="flex items-center gap-2 border border-[#F5F0E8]/30 bg-[#F5F0E8]/[0.06] text-[#F5F0E8] hover:border-[#C9A84C] hover:text-[#C9A84C] hover:bg-[#C9A84C]/[0.07] transition-all duration-300 text-[9px] tracking-[0.3em] uppercase font-medium px-5 h-9"
+                >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    Regresar
+                </button>
             </div>
         </div>
     );

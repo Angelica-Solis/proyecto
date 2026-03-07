@@ -5,7 +5,6 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { Layout } from './components/Layout/Layout'
 import { Home } from './components/Home/Home'
 import { PageNotFound } from './components/Home/PageNotFound'
-import { DetailMovie } from './components/Subasta/DetailMovie'
 import { UserTable } from './components/User/UserTable'
 
 import { UserDetail } from './components/User/UserDetail'
@@ -34,6 +33,7 @@ const rutas = createBrowserRouter([
 
 
       { path: "objeto/listado", element: <ObjetoTable /> },
+
 
       { path: "puja/listado/:id", element: <PujaTable /> },
 
