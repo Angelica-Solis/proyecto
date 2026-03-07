@@ -3,16 +3,9 @@ import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-<<<<<<< HEAD
 import { Link, useNavigate } from "react-router-dom";
 import objetooService from "@/services/ObjetoService";
 import { ArrowLeft, Info } from "lucide-react";
-=======
-import { Link } from "react-router-dom";
-import objetooService from "@/services/ObjetoService"; //
-import { Info } from "lucide-react";
-
->>>>>>> 2e014e78a131a6ab8d640e1c8a18a7f245e8af69
 
 export function ObjetoTable() {
     const navigate = useNavigate();
@@ -28,7 +21,6 @@ export function ObjetoTable() {
     return (
         <div className="min-h-screen bg-[#080807] text-[#F5F0E8] p-10 font-sans">
 
-<<<<<<< HEAD
             {/* Encabezado */}
             <div className="mb-10">
                 <div className="flex items-center gap-3 mb-3">
@@ -70,19 +62,6 @@ export function ObjetoTable() {
                                             Cargando objetos…
                                         </span>
                                     </div>
-=======
-                                    <TableCell>
-                                    <Badge variant="outline">{objetoo.condicion}</Badge>
-                                    </TableCell>
-
-                                    <TableCell>{objetoo.duenno}</TableCell>
-                                <TableCell className="text-right">
-                                    <Button size="icon" variant="ghost" asChild>
-                                        <Link to={`/objeto/detalle/${objetoo.id}`}>
-                                            <Info className="h-4 w-4" />
-                                        </Link>
-                                    </Button>
->>>>>>> 2e014e78a131a6ab8d640e1c8a18a7f245e8af69
                                 </TableCell>
                             </TableRow>
 
