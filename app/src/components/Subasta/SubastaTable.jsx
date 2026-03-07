@@ -92,6 +92,7 @@ export function SubastaTable() {
               </TableRow>
 
             ) : data.length > 0 ? (
+<<<<<<< HEAD
               data.map((item, idx) => (
                 <TableRow
                   key={item.id}
@@ -106,6 +107,17 @@ export function SubastaTable() {
                     <span className="text-base font-light italic text-[#F5F0E8]">
                       {item.nombreObjeto}
                     </span>
+=======
+              data.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell>
+                    {/* Imagen*/}
+                    <img 
+                      src={`http://127.0.0.1:81/proyecto/api/uploads/${item.imagen}`} 
+                      alt={item.nombreObjeto}
+                      className="h-12 w-12 rounded object-cover border" 
+                    />
+>>>>>>> 2e014e78a131a6ab8d640e1c8a18a7f245e8af69
                   </TableCell>
 
                   {/* Fecha Inicio */}

@@ -83,9 +83,83 @@ export function ObjetoDetalle() {
                                 </span>
                             </div>
 
+<<<<<<< HEAD
                             <DetailRow icon={User} label="Descripción" value={d.descripcionObjeto} />
                             <DetailRow icon={Calendar} label="Fecha Registro" value={d.fechaRegistro} />
                             <DetailRow icon={ShieldCheck} label="Condición" value={d.condicion} />
+=======
+                            {/* Columna derecha */}
+                            <div className="space-y-6">
+
+                                <div className="flex items-start gap-3">
+                                    <Globe className="h-5 w-5 text-primary mt-1" />
+                                    <div>
+                                        <span className="font-semibold">Propietario:</span>
+                                        <p className="text-muted-foreground">
+                                            {data.data.propietario}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Categorias */}
+                                <div className="flex items-start gap-3">
+                                    <Globe className="h-5 w-5 text-primary mt-1" />
+                                    <div>
+                                        <span className="font-semibold">Categorías:</span>
+                                        <div className="flex flex-col">
+                                            {data.data.categorias?.map((cat, index) => (
+                                                <span key={index} className="text-muted-foreground">
+                                                    {cat.nombreCategoria}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Imagen*/}
+                                <div className="flex flex-col items-center">
+                                    <span className="font-semibold mb-2">Imagen:</span>
+                                    {data.data.imagenes?.map((img, index) => (
+                                        <img
+                                            key={index}
+                                            src={`http://127.0.0.1:81/proyecto/api/uploads/${img.nombreImagen}`}
+                                            alt={data.data.nombreObjeto}
+                                            className=" w-64 rounded-xl shadow-lg border border-border object-cover hover:scale-105 transition-transform" />))}
+                                </div>
+                            </div>
+
+                            {/* Subastas */}
+                            <div className="col-span-2 flex items-start gap-3">
+                                <Globe className="h-5 w-5 text-primary mt-1" />
+                                <div>
+                                    <span className="font-semibold">Subastas:</span>
+
+                                    <div className="flex flex-col gap-2 mt-1">
+                                        {data.data.subastas?.map((subasta, index) => (
+                                            <div key={index} className="text-muted-foreground border-l-2 border-primary pl-3">
+
+                                                <div>
+                                                    Subasta Nº {subasta.id}
+                                                </div>
+
+                                                <div>
+                                                    Inicio: {subasta.fechaInicio}
+                                                </div>
+
+                                                <div>
+                                                    Cierre: {subasta.fechaCierre}
+                                                </div>
+
+                                                <div>
+                                                    Estado:
+                                                    <span>
+                                                        {" "}{subasta.estado}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+>>>>>>> 2e014e78a131a6ab8d640e1c8a18a7f245e8af69
 
                             {/* Estado */}
                             <div className="flex items-start gap-3 py-4 border-b border-[#C9A84C]/[0.07]">

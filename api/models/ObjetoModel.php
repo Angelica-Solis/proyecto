@@ -138,7 +138,7 @@ class ObjetoModel
     //Historial de subastas por objeto.
     public function getSubastasPorObjeto($idObjeto)
     {
-        $vSql = "SELECT  idObjeto, fechaInicio, fechaCierre, idEstadoSubasta
+        $vSql = "SELECT  id, idObjeto, fechaInicio, fechaCierre, idEstadoSubasta
             FROM subasta
             WHERE idObjeto = $idObjeto;";
 
