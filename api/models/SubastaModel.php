@@ -123,7 +123,7 @@ public function getHistorialPujas($idSubasta)
     $vSql = "SELECT monto, fechaHora, idUsuario 
             FROM puja 
             WHERE idSubasta = $idSubasta 
-            ORDER BY fechaHora DESC;";
+            ORDER BY monto ASC;";
             
     $vResultado = $this->enlace->executeSQL($vSql);
 
