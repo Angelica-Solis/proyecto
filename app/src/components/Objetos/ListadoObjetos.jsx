@@ -40,7 +40,7 @@ export function ObjetoTable() {
                 <Table>
                     <TableHeader>
                         <TableRow className="border-b border-[#C9A84C]/20 bg-[#C9A84C]/5 hover:bg-[#C9A84C]/5">
-                            {["Nombre", "Categorías", "Condición", "Dueño", ""].map((h, i) => (
+                            {["Nombre", "Imagen", "Condición", "Dueño", ""].map((h, i) => (
                                 <TableHead
                                     key={i}
                                     className={`text-[#C9A84C] text-[11px] font-medium tracking-[0.35em] uppercase py-4 border-b border-[#C9A84C]/20 ${i === 4 ? "text-right" : ""}`}
@@ -82,11 +82,14 @@ export function ObjetoTable() {
                                         </span>
                                     </TableCell>
 
-                                    {/* Categorías */}
+                                    {/* Imagen del objeto */}
+                                    {/* Imagen del objeto */}
                                     <TableCell className="py-3">
-                                        <span className="inline-flex items-center justify-center px-2.5 py-0.5 border border-[#C9A84C]/25 bg-[#C9A84C]/[0.07] text-[#C9A84C] text-[12px] font-medium tracking-widest">
-                                            {objetoo.categorias}
-                                        </span>
+                                        <img
+                                            src={`http://127.0.0.1:81/proyecto/api/uploads/${objetoo.imagenPrincipal}`}
+                                            alt={objetoo.nombreObjeto}
+                                            className="w-16 h-16 object-cover border border-[#C9A84C]/25 hover:border-[#C9A84C]/60 transition-all duration-300"
+                                        />
                                     </TableCell>
 
                                     {/* Condicion */}

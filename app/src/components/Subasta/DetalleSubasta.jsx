@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import subastaaService from "@/services/SubastaService";
-import { ArrowLeft, Calendar, CircleDollarSign, Flag, Gavel, Layers, Package, ShieldCheck, Tag, TrendingUp } from "lucide-react";
+import { ArrowBigDownIcon, ArrowLeft, Calendar, CircleDollarSign, Download, Flag, Gavel, Layers, Package, ShieldCheck, Tag, TrendingUp } from "lucide-react";
 import { LoadingGrid } from "../ui/custom/LoadingGrid";
 import { ErrorAlert } from "../ui/custom/ErrorAlert";
 import { EmptyState } from "../ui/custom/EmptyState";
@@ -98,6 +98,7 @@ export function SubastaDetalle() {
                         <DetailRow icon={Calendar} label="Fecha de Cierre" value={d.fechaCierre} />
                         <DetailRow icon={CircleDollarSign} label="Precio Base" value={d.precioBase} />
                         <DetailRow icon={TrendingUp} label="Incremento Mínimo" value={d.incrementoMinimo} />
+                        <DetailRow icon={Gavel} label="Cantidad de Pujas" value={d.cantidadPujas} />
 
                         <div className="flex items-start gap-3 py-4">
                             <Flag className="h-4 w-4 text-[#C9A84C] mt-0.5 shrink-0" />
