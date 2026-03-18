@@ -26,4 +26,17 @@ class objeto{
             handleException($e);
         }
     }
+    public function activos() {
+    try {
+        $response = new Response();
+        $objetoM = new ObjetoModel();
+        
+        // Llamamos al modelo para obtener objetos con idEstadoObjeto = 1 (Activo)
+        $result = $objetoM->getActivos();
+        
+        $response->toJSON($result);
+    } catch (Exception $e) {
+        handleException($e);
+    }
+}
 }

@@ -164,4 +164,10 @@ class ObjetoModel
 
         return (!empty($res)) ? $res[0]->descripcionEstado : null;
     }
+
+public function getActivos() {
+    $vSQL = "SELECT id, nombreObjeto FROM objeto WHERE idEstadoObjeto = 1 ORDER BY nombreObjeto DESC;";
+    $vResultado = $this->enlace->ExecuteSQL($vSQL);
+    return $vResultado;
+}
 }

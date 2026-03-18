@@ -11,7 +11,9 @@ class ObjetoService {
   getDetalleObjeto(id){
     return axios.get(BASE_URL + '/DetalleObjeto/'+ id);
   }
-  
+  getActivos() {
+        return axios.get(BASE_URL + '/activos/');
+    }
 };
 
 export default new ObjetoService();

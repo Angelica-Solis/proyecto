@@ -59,6 +59,9 @@ export default function Header() {
     { title: "Listado de Objetos",    href: "/objeto/listado",icon: <CarFront   className="h-4 w-4" /> },
     { title: "Gráfico de Alquileres", href: "/rental/graph",  icon: <ChartArea  className="h-4 w-4" /> },
   ];
+  const mantenimientoItems = [
+  { title: "Mantenimiento de Subastas", href: "/mantenimiento/subastas", icon: <Gavel className="h-4 w-4" /> },
+  ];
 
   const userItems = [
     { title: "Login",       href: "/user/login",   icon: <LogIn    className="h-4 w-4" /> },
@@ -175,7 +178,32 @@ export default function Header() {
               </MenubarContent>
             </MenubarMenu>
 
-            {/* Usuarios / Mantenimiento */}
+            {/* Mantenimiento */}
+            <MenubarMenu>
+              <MenubarTrigger style={triggerStyle}
+                onMouseEnter={e => e.currentTarget.style.color = G.gold}
+                onMouseLeave={e => e.currentTarget.style.color = G.whiteDim}
+              >
+                <Layers className="h-3 w-3" style={{ color: G.gold }} />
+                Mantenimientos
+                <ChevronDown className="h-3 w-3" />
+              </MenubarTrigger>
+              <MenubarContent style={dropdownStyle}>
+                {mantenimientoItems.map(item => (
+                  <MenubarItem key={item.href} asChild>
+                    <Link to={item.href} style={dropItemStyle}
+                      onMouseEnter={e => { e.currentTarget.style.color = G.gold; e.currentTarget.style.background = G.goldGhost; }}
+                      onMouseLeave={e => { e.currentTarget.style.color = G.whiteDim; e.currentTarget.style.background = "transparent"; }}
+                    >
+                      <span style={{ color: G.gold }}>{item.icon}</span>
+                      {item.title}
+                    </Link>
+                  </MenubarItem>
+                ))}
+              </MenubarContent>
+            </MenubarMenu>
+
+            {/* Usuarios */}
             <MenubarMenu>
               <MenubarTrigger style={triggerStyle}
                 onMouseEnter={e => e.currentTarget.style.color = G.gold}
@@ -257,7 +285,7 @@ export default function Header() {
 
           {/* Hamburguesa movil */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-           
+          
 
             <SheetContent side="left" style={{
               background: "rgba(8,8,7,0.98)", backdropFilter: "blur(20px)",
