@@ -118,10 +118,7 @@ export function SubastaTable() {
                 : headersFinalizadas
               ).map((h, i) => (
 
-                <TableHead
-                  key={i}
-                  className={`text-[#C9A84C] text-[11px] font-medium tracking-[0.35em] uppercase py-4 border-b border-[#C9A84C]/20`}
-                >
+                <TableHead key={i} className={`text-[#C9A84C] text-[11px] font-medium tracking-[0.35em] uppercase py-4 border-b border-[#C9A84C]/20`}>
                   {h}
                 </TableHead>
 
@@ -153,14 +150,7 @@ export function SubastaTable() {
 
               data.map((item, idx) => (
 
-                <TableRow
-                  key={item.id}
-                  className={`
-                    border-b border-[#C9A84C]/[0.07]
-                    hover:bg-[#C9A84C]/[0.06]
-                    ${idx % 2 !== 0 ? "bg-[#F5F0E8]/[0.03]" : "bg-transparent"}
-                  `}
-                >
+                <TableRow key={item.id} className={` border-b border-[#C9A84C]/[0.07] hover:bg-[#C9A84C]/[0.06] ${idx % 2 !== 0 ? "bg-[#F5F0E8]/[0.03]" : "bg-transparent"} `}>
 
                   {filtro === "activas" ? (
 

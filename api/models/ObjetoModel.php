@@ -80,7 +80,7 @@ class ObjetoModel
                 //Estado
                 $objeto->estado = $this->getEstado($objeto->idEstadoObjeto);
                 //Duenno
-                $duenno = $usuarioM->get($objeto->id);
+                $duenno = $usuarioM->get($objeto->idVendedor);
                 $objeto->duenno = $duenno ? $duenno->nombreUsuario : 'No esta definido';
                 // Unset funciona para que elimine una variable o propiedad de un objeto en tiempo de ejecucion
                 unset($objeto->idCondicion, $objeto->idVendedor, $objeto->idEstadoObjeto);
