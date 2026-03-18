@@ -56,4 +56,78 @@ public function historial($idSubasta)
         handleException($e);
     }
 }
+
+// Listado para mantenimiento (TODAS las subastas)
+    public function all()
+    {
+        try {
+            $response = new Response();
+            $subastaM = new SubastaModel();
+            $result = $subastaM->all();
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
+
+    // CREAR SUBASTA
+    public function create()
+    {
+        try {
+            $response = new Response();
+            $json = file_get_contents('php://input');
+            $objeto = json_decode($json);
+
+            // VARIABLE LÓGICA SIMULADA: Asignamos el vendedor directamente
+            $objeto->idVendedor = 1; 
+
+            $subastaM = new SubastaModel();
+            $result = $subastaM->create($objeto);
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
+
+    // ACTUALIZAR SUBASTA (Borrador)
+    public function update()
+    {
+        try {
+            $response = new Response();
+            $json = file_get_contents('php://input');
+            $objeto = json_decode($json);
+
+            $subastaM = new SubastaModel();
+            $result = $subastaM->update($objeto);
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
+
+    // PUBLICAR SUBASTA
+    public function publicar($id)
+    {
+        try {
+            $response = new Response();
+            $subastaM = new SubastaModel();
+            $result = $subastaM->publicar($id);
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
+
+    // CANCELAR SUBASTA
+    public function cancelar($id)
+    {
+        try {
+            $response = new Response();
+            $subastaM = new SubastaModel();
+            $result = $subastaM->cancelar($id);
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
 }

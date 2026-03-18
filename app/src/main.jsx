@@ -1,7 +1,9 @@
+//uso de sonner
+import { Toaster } from 'sonner';
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout/Layout'
 import { Home } from './components/Home/Home'
 import { PageNotFound } from './components/Home/PageNotFound'
@@ -14,6 +16,8 @@ import { ObjetoDetalle } from './components/Objetos/DetalleObjeto'
 import { SubastaTable } from './components/Subasta/SubastaTable'
 import { SubastaDetalle } from './components/Subasta/DetalleSubasta'
 import { PujaTable } from './components/Pujas/ListadoPujas'
+import { SubastaMantenimiento } from './components/Subasta/SubastaMantenimiento'
+import { CrearSubasta } from "./components/Subasta/CrearSubasta";
 
 
 
@@ -39,12 +43,16 @@ const rutas = createBrowserRouter([
 
       { path: "user/detail/:id", element: <UserDetail /> },
       { path: "objeto/detalle/:id", element: <ObjetoDetalle /> },
-      { path: "subasta/detalle/:id", element: <SubastaDetalle /> }
+      { path: "subasta/detalle/:id", element: <SubastaDetalle /> },
+      //ruta para mantenimiento de subastas
+      { path: "mantenimiento/subastas", element: <SubastaMantenimiento />},
+      { path: "mantenimiento/subastas/crear", element: <CrearSubasta /> }
     ]
   }
 ])
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <RouterProvider router={rutas} />
+    <Toaster richColors position="top-center" />
   </StrictMode>,
 )
