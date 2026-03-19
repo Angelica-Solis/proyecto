@@ -23,8 +23,13 @@ class UsuarioModel
     public function get($id)
     {
         // Traemos solo datos públicos por seguridad
-        $vSql = "SELECT id, nombreUsuario, emailUsuario FROM usuario WHERE id=$id;";
+        $vSql = "SELECT u.id, u.nombreUsuario, u.emailUsuario, u.IdRol, u.IdEstado, u.fecha_registro, r.nombreRol, e.descripcionEstado
+         FROM usuario u 
+         INNER JOIN rol r ON r.id = u.IdRol
+         INNER JOIN estado_usuario e ON e.id = u.IdEstado
+         WHERE u.id=$id;";
         $vResultado = $this->enlace->executeSQL($vSql);
+
         return (!empty($vResultado)) ? $vResultado[0] : null;
     }
     //Listado de usuarios mostrando solo rol, estado y nombre del usuario
@@ -42,51 +47,66 @@ class UsuarioModel
 
     //Obtener detalle de cada usuario
     public function DetalleUsuarios($id)
-{
-    // 1. Información básica (REQUERIDO: Nombre, Rol, Estado, Fecha)
-    $vSql = "SELECT u.id, u.nombreUsuario, r.nombreRol, e.descripcionEstado, u.fecha_registro, u.emailUsuario
+    {
+        // 1. Información básica (REQUERIDO: Nombre, Rol, Estado, Fecha)
+        $vSql = "SELECT u.id, u.nombreUsuario, r.nombreRol, e.descripcionEstado, u.fecha_registro, u.emailUsuario
             FROM usuario u
             INNER JOIN rol r ON r.id = u.IdRol
             INNER JOIN estado_usuario e ON e.id = u.IdEstado
             WHERE u.id = $id;";
 
-    $vResultado = $this->enlace->executeSQL($vSql);
+        $vResultado = $this->enlace->executeSQL($vSql);
 
-    if (!empty($vResultado)) {
-        $usuario = $vResultado[0];
-        
-        // 2. Campos Calculados
-        // Conteo de Subastas creadas
-        $sqlCountSubastas = "SELECT COUNT(*) as total FROM subasta WHERE idVendedor = $id";
-        $resSub = $this->enlace->executeSQL($sqlCountSubastas);
-        $usuario->cantidadSubastas = $resSub[0]->total;
+        if (!empty($vResultado)) {
+            $usuario = $vResultado[0];
 
-        // Conteo de Pujas realizadas
-        $sqlCountPujas = "SELECT COUNT(*) as total FROM puja WHERE idUsuario = $id";
-        $resPuja = $this->enlace->executeSQL($sqlCountPujas);
-        $usuario->cantidadPujas = $resPuja[0]->total;
+            // 2. Campos Calculados
+            // Conteo de Subastas creadas
+            $sqlCountSubastas = "SELECT COUNT(*) as total FROM subasta WHERE idVendedor = $id";
+            $resSub = $this->enlace->executeSQL($sqlCountSubastas);
+            $usuario->cantidadSubastas = $resSub[0]->total;
 
-        // 3. Historial detallado
-        $usuario->actividad = [];
-        if ($usuario->nombreRol == 'Vendedor') {
-            $sqlVendedor = "SELECT o.nombreObjeto as titulo, s.precioBase as monto, s.fechaInicio as fecha
+            // Conteo de Pujas realizadas
+            $sqlCountPujas = "SELECT COUNT(*) as total FROM puja WHERE idUsuario = $id";
+            $resPuja = $this->enlace->executeSQL($sqlCountPujas);
+            $usuario->cantidadPujas = $resPuja[0]->total;
+
+            // 3. Historial detallado
+            $usuario->actividad = [];
+            if ($usuario->nombreRol == 'Vendedor') {
+                $sqlVendedor = "SELECT o.nombreObjeto as titulo, s.precioBase as monto, s.fechaInicio as fecha
                             FROM subasta s
                             INNER JOIN objeto o ON s.idObjeto = o.id
                             WHERE s.idVendedor = $id
                             ORDER BY s.fechaInicio DESC";
-            $usuario->actividad = $this->enlace->executeSQL($sqlVendedor) ?: [];
-        } else {
-            $sqlComprador = "SELECT o.nombreObjeto as titulo, p.monto, p.fechaHora as fecha
+                $usuario->actividad = $this->enlace->executeSQL($sqlVendedor) ?: [];
+            } else {
+                $sqlComprador = "SELECT o.nombreObjeto as titulo, p.monto, p.fechaHora as fecha
                             FROM puja p
                             INNER JOIN subasta s ON p.idSubasta = s.id
                             INNER JOIN objeto o ON s.idObjeto = o.id
                             WHERE p.idUsuario = $id
                             ORDER BY p.fechaHora DESC";
-            $usuario->actividad = $this->enlace->executeSQL($sqlComprador) ?: [];
-        }
+                $usuario->actividad = $this->enlace->executeSQL($sqlComprador) ?: [];
+            }
 
-        return $usuario;
+            return $usuario;
+        }
+        return null;
     }
-    return null;
-}
+
+    public function update($usuario)
+    {
+
+        $sql = "UPDATE usuario SET 
+            nombreUsuario ='$usuario->nombreUsuario',
+            emailUsuario ='$usuario->emailUsuario',
+            IdEstado ='$usuario->IdEstado'
+        WHERE id = $usuario->id";
+
+        $cResults = $this->enlace->executeSQL_DML($sql);
+
+        //Retornar usuario
+        return $this->get($usuario->id);
+    }
 }

@@ -18,6 +18,7 @@ import { SubastaDetalle } from './components/Subasta/DetalleSubasta'
 import { PujaTable } from './components/Pujas/ListadoPujas'
 import { SubastaMantenimiento } from './components/Subasta/SubastaMantenimiento'
 import { CrearSubasta } from "./components/Subasta/CrearSubasta";
+import { UpdateUser } from './components/User/UserUpdate';
 
 
 
@@ -42,6 +43,7 @@ const rutas = createBrowserRouter([
       { path: "puja/listado/:id", element: <PujaTable /> },
 
       { path: "user/detail/:id", element: <UserDetail /> },
+      { path: "user/update/:id", element: <UpdateUser /> },
       { path: "objeto/detalle/:id", element: <ObjetoDetalle /> },
       { path: "subasta/detalle/:id", element: <SubastaDetalle /> },
       //ruta para mantenimiento de subastas

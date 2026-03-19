@@ -5,7 +5,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import UserService from "@/services/UserService";
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft, Info, Pencil, Trash2 } from "lucide-react";
 
 export function UserTable() {
     const navigate = useNavigate();
@@ -99,11 +99,39 @@ export function UserTable() {
 
                                     {/* Acciones */}
                                     <TableCell className="py-3 pr-4 text-right">
-                                        <Button size="icon" variant="ghost" asChild className="w-8 h-8 p-0 rounded-none border border-[#C9A84C]/20 text-[#F5F0E8]/50 hover:border-[#C9A84C] hover:text-[#C9A84C] hover:bg-[#C9A84C]/[0.07] transition-all duration-300">
-                                            <Link to={`/user/detail/${user.id}`}>
-                                                <Info className="h-4 w-4" />
-                                            </Link>
-                                        </Button>
+                                        <div className="flex items-center justify-end gap-1">
+                                            {/* Boton de info*/}
+                                            <div className="relative group/info">
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    asChild
+                                                    className="w-8 h-8 p-0 rounded-none border border-[#C9A84C]/20 text-[#F5F0E8]/50 hover:border-[#C9A84C] hover:text-[#C9A84C] hover:bg-[#C9A84C]/[0.07] transition-all duration-300">
+                                                    <Link to={`/user/detail/${user.id}`}>
+                                                        <Info className="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
+                                                <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-[10px] font-medium tracking-wider uppercase bg-[#1A1A0F] border border-[#C9A84C]/30 text-[#C9A84C] opacity-0 group-hover/info:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                                                    Detalle
+                                                </span>
+                                            </div>
+
+                                            {/* Boton de editar */}
+                                            <div className="relative group/edit">
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    asChild
+                                                    className="w-8 h-8 p-0 rounded-none border border-sky-500/20 text-sky-400/50 hover:border-sky-400 hover:text-sky-300 hover:bg-sky-400/[0.07] transition-all duration-300">
+                                                    <Link to={`/user/update/${user.id}`}>
+                                                    <Pencil className="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
+                                                <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-[10px] font-medium tracking-wider uppercase bg-[#0a1520] border border-sky-500/30 text-sky-300 opacity-0 group-hover/edit:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                                                    Editar
+                                                </span>
+                                            </div>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))
