@@ -5,25 +5,68 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import objetooService from "@/services/ObjetoService";
-import { ArrowLeft, Info, Trash2, Edit, Plus } from "lucide-react";
+import { ArrowLeft, Info, Trash2, Edit, Plus, Eye, EyeOff, RotateCcw } from "lucide-react";
+import { toast } from "sonner";
 
 export function ObjetoTable() {
     const navigate = useNavigate();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [verEliminados, setVerEliminados] = useState(false); // Filtro lógico
 
-    useEffect(() => {
-        objetooService.getListadoObjeto()
-            .then((response) => { setData(response.data.data); setLoading(false); })
-            .catch((error) => { console.error("Error al obtener los objetos:", error); setLoading(false); });
-    }, []);
+const cargarObjetos = () => {
+    setLoading(true);
+    
+    const peticion = verEliminados 
+        ? objetooService.getEliminados() 
+        : objetooService.getListadoObjeto();
 
-    const handleDelete = (id) => {
-        if (window.confirm("¿Estás seguro de que deseas eliminar este objeto?")) {
-            // Aquí va la logica de eliminacion
-            console.log("Eliminar objeto:", id);
+    peticion
+        .then((response) => {
+            console.log("Datos recibidos:", response.data.data);
+            console.log("¿Tiene imagenPrincipal?", response.data.data[0]?.imagenPrincipal);
+            console.log("¿Tiene condicion?", response.data.data[0]?.condicion);
+            console.log("¿Tiene duenno?", response.data.data[0]?.duenno);
+            setData(response.data.data);
+            setLoading(false);
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            setLoading(false);
+        });
+};
+
+useEffect(() => {
+    cargarObjetos();
+}, [verEliminados]);
+
+    const handleDelete = async (id) => {
+        if (window.confirm("¿Deseas mover este objeto a la papelera?")) {
+            try {
+                await objetooService.delete(id);
+                toast.success("Objeto eliminado lógicamente");
+                cargarObjetos();
+            } catch (error) {
+                const msg = error.response?.data?.message || "Error al eliminar";
+                toast.error(msg);
+            }
         }
     };
+
+    const handleRestore = async (id) => {
+        try {
+            await objetooService.restore(id);
+            toast.success("Objeto restaurado");
+            cargarObjetos();
+        } catch (error) {
+            toast.error("No se pudo restaurar el objeto");
+        }
+    };
+
+    // Lógica de filtrado: ID 4 es "Eliminado"
+    const objetosFiltrados = data.filter(obj => 
+        verEliminados ? obj.idEstadoObjeto === 4 : obj.idEstadoObjeto !== 4
+    );
 
     return (
         <div className="min-h-screen bg-[#080807] text-[#F5F0E8] p-10 font-sans">
@@ -35,27 +78,49 @@ export function ObjetoTable() {
                         <div className="flex items-center gap-3 mb-3">
                             <div className="w-7 h-px bg-[#C9A84C]" />
                             <span className="text-[#C9A84C] uppercase tracking-[0.4em] text-[12px] font-medium">
-                                Panel de Control
+                                {verEliminados ? "Archivo / Papelera" : "Panel de Control"}
                             </span>
                         </div>
                         <h1 className="text-4xl font-light tracking-tight leading-none">
-                            Listado de{" "}
-                            <em className="text-[#C9A84C] not-italic font-light">Objetos</em>
+                            {verEliminados ? "Objetos " : "Listado de "}
+                            <em className="text-[#C9A84C] not-italic font-light">
+                                {verEliminados ? "Eliminados" : "Objetos"}
+                            </em>
                         </h1>
                     </div>
 
-                    {/* Boton agregar */}
-                    <div className="group relative">
-                        <Button
-                            onClick={() => navigate('/objeto/create')}
-                            className="w-10 h-10 p-0 rounded-none border border-[#C9A84C]/40 bg-[#C9A84C]/10 text-[#C9A84C] hover:border-[#C9A84C] hover:bg-[#C9A84C]/20 hover:shadow-[0_0_12px_rgba(201,168,76,0.3)] transition-all duration-300"
-                        >
-                            <Plus className="h-5 w-5" />
-                        </Button>
-                        {/* Tooltip */}
-                        <span className="absolute top-12 right-0 px-3 py-1.5 bg-[#C9A84C] text-[#080807] text-[10px] font-medium tracking-[0.2em] uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                            Agregar Objeto
-                        </span>
+                    <div className="flex items-center gap-4">
+                        {/* Botón para alternar entre Activos y Papelera (Estética similar al Plus) */}
+                        <div className="group relative">
+                            <Button
+                                onClick={() => setVerEliminados(!verEliminados)}
+                                className={`w-10 h-10 p-0 rounded-none border transition-all duration-300 ${
+                                    verEliminados 
+                                    ? "border-blue-400/40 bg-blue-400/10 text-blue-400 hover:bg-blue-400/20" 
+                                    : "border-[#F5F0E8]/20 bg-transparent text-[#F5F0E8]/50 hover:border-[#F5F0E8] hover:text-[#F5F0E8]"
+                                }`}
+                            >
+                                {verEliminados ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                            </Button>
+                            <span className="absolute top-12 right-0 px-3 py-1.5 bg-[#C9A84C] text-[#080807] text-[10px] font-medium tracking-[0.2em] uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                                {verEliminados ? "Ver Activos" : "Ver Papelera"}
+                            </span>
+                        </div>
+
+                        {/* Boton agregar (Solo visible en activos) */}
+                        {!verEliminados && (
+                            <div className="group relative">
+                                <Button
+                                    onClick={() => navigate('/objeto/create')}
+                                    className="w-10 h-10 p-0 rounded-none border border-[#C9A84C]/40 bg-[#C9A84C]/10 text-[#C9A84C] hover:border-[#C9A84C] hover:bg-[#C9A84C]/20 hover:shadow-[0_0_12px_rgba(201,168,76,0.3)] transition-all duration-300"
+                                >
+                                    <Plus className="h-5 w-5" />
+                                </Button>
+                                <span className="absolute top-12 right-0 px-3 py-1.5 bg-[#C9A84C] text-[#080807] text-[10px] font-medium tracking-[0.2em] uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                                    Agregar Objeto
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -76,131 +141,112 @@ export function ObjetoTable() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-
-                        {/* Estado: cargando */}
                         {loading ? (
                             <TableRow className="hover:bg-transparent border-0">
                                 <TableCell colSpan={5} className="py-16 text-center">
                                     <div className="flex flex-col items-center gap-3">
                                         <div className="w-7 h-7 rounded-full border-2 border-[#C9A84C]/20 border-t-[#C9A84C] animate-spin" />
                                         <span className="text-[12px] tracking-[0.35em] uppercase text-[#F5F0E8]/40">
-                                            Cargando objetos…
+                                            Cargando información...
                                         </span>
                                     </div>
                                 </TableCell>
                             </TableRow>
-
-                        ) : data.length > 0 ? (
-                            data.map((objetoo, index) => (
+                        ) : objetosFiltrados.length > 0 ? (
+                            objetosFiltrados.map((objetoo, index) => (
                                 <TableRow
                                     key={index}
-                                    className={`
-                                        border-b border-[#C9A84C]/[0.07] transition-colors duration-200
-                                        hover:bg-[#C9A84C]/[0.06]
-                                        ${index % 2 !== 0 ? "bg-[#F5F0E8]/[0.03]" : "bg-transparent"}
-                                    `}
+                                    className={`border-b border-[#C9A84C]/[0.07] transition-colors duration-200 hover:bg-[#C9A84C]/[0.06] ${index % 2 !== 0 ? "bg-[#F5F0E8]/[0.03]" : "bg-transparent"}`}
                                 >
-                                    {/* Nombre */}
                                     <TableCell className="py-3">
                                         <span className="text-base font-light italic text-[#F5F0E8]">
                                             {objetoo.nombreObjeto}
                                         </span>
                                     </TableCell>
 
-                                    {/* Imagen del objeto */}
                                     <TableCell className="py-3">
                                         <img
                                             src={`http://127.0.0.1:81/proyecto/api/uploads/${objetoo.imagenPrincipal}`}
                                             alt={objetoo.nombreObjeto}
-                                            className="w-16 h-16 object-cover border border-[#C9A84C]/25 hover:border-[#C9A84C]/60 transition-all duration-300"
+                                            className="w-16 h-16 object-cover border border-[#C9A84C]/25"
                                         />
                                     </TableCell>
 
-                                    {/* Condicion */}
                                     <TableCell className="py-3">
                                         <span className="inline-flex items-center gap-1.5 px-3 py-1 border border-[#C9A84C]/25 bg-[#C9A84C]/[0.07] text-[#C9A84C] text-[11px] font-medium tracking-[0.3em] uppercase">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-[#C9A84C] shadow-[0_0_6px_#C9A84C]" />
+                                            <span className="w-1.5 h-1.5 rounded-full bg-[#C9A84C]" />
                                             {objetoo.condicion}
                                         </span>
                                     </TableCell>
 
-                                    {/* Dueño */}
                                     <TableCell className="py-3">
                                         <span className="text-[13px] font-light tracking-wide text-[#F5F0E8]/50">
                                             {objetoo.duenno}
                                         </span>
                                     </TableCell>
 
-                                    {/* Acciones */}
                                     <TableCell className="py-3 pr-4">
                                         <div className="flex items-center justify-end gap-2">
-                                            {/* Boton ver detalle*/}
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                asChild
-                                                className="w-8 h-8 p-0 rounded-none border border-[#C9A84C]/20 text-[#F5F0E8]/50 hover:border-[#C9A84C] hover:text-[#C9A84C] hover:bg-[#C9A84C]/[0.07] transition-all duration-300"
-                                            >
-                                                <Link to={`/objeto/detalle/${objetoo.id}`}>
-                                                    <Info className="h-4 w-4" />
-                                                </Link>
-                                            </Button>
-
-                                            {/* Boton modificar */}
-                                            <div className="group relative">
+                                            {verEliminados ? (
                                                 <Button
                                                     size="icon"
                                                     variant="ghost"
-                                                    onClick={() => navigate(`/objeto/editar/${objetoo.id}`)}
-                                                    className="w-8 h-8 p-0 rounded-none border border-[#4A9EFF]/20 text-[#4A9EFF]/70 hover:border-[#4A9EFF] hover:text-[#4A9EFF] hover:bg-[#4A9EFF]/[0.1] transition-all duration-300"
+                                                    onClick={() => handleRestore(objetoo.id)}
+                                                    className="w-8 h-8 p-0 rounded-none border border-green-500/20 text-green-500/70 hover:border-green-500 hover:text-green-500 hover:bg-green-500/10 transition-all duration-300"
                                                 >
-                                                    <Edit className="h-4 w-4" />
+                                                    <RotateCcw className="h-4 w-4" />
                                                 </Button>
-                                                {/* Tooltip */}
-                                                <span className="absolute bottom-10 right-0 px-2 py-1 bg-[#4A9EFF] text-[#080807] text-[9px] font-medium tracking-[0.15em] uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                                                    Modificar
-                                                </span>
-                                            </div>
-
-                                            {/* Boton eliminar */}
-                                            <div className="group relative">
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    onClick={() => handleDelete(objetoo.id)}
-                                                    className="w-8 h-8 p-0 rounded-none border border-[#FF4A4A]/20 text-[#FF4A4A]/70 hover:border-[#FF4A4A] hover:text-[#FF4A4A] hover:bg-[#FF4A4A]/[0.1] transition-all duration-300"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                                {/* Tooltip */}
-                                                <span className="absolute bottom-10 right-0 px-2 py-1 bg-[#FF4A4A] text-[#080807] text-[9px] font-medium tracking-[0.15em] uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                                                    Eliminar
-                                                </span>
-                                            </div>
+                                            ) : (
+                                                <>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        asChild
+                                                        className="w-8 h-8 p-0 rounded-none border border-[#C9A84C]/20 text-[#F5F0E8]/50 hover:border-[#C9A84C] hover:text-[#C9A84C] hover:bg-[#C9A84C]/[0.07] transition-all duration-300"
+                                                    >
+                                                        <Link to={`/objeto/detalle/${objetoo.id}`}>
+                                                            <Info className="h-4 w-4" />
+                                                        </Link>
+                                                    </Button>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() => navigate(`/objeto/editar/${objetoo.id}`)}
+                                                        className="w-8 h-8 p-0 rounded-none border border-[#4A9EFF]/20 text-[#4A9EFF]/70 hover:border-[#4A9EFF] hover:text-[#4A9EFF] hover:bg-[#4A9EFF]/[0.1] transition-all duration-300"
+                                                    >
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() => handleDelete(objetoo.id)}
+                                                        className="w-8 h-8 p-0 rounded-none border border-[#FF4A4A]/20 text-[#FF4A4A]/70 hover:border-[#FF4A4A] hover:text-[#FF4A4A] hover:bg-[#FF4A4A]/[0.1] transition-all duration-300"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </>
+                                            )}
                                         </div>
                                     </TableCell>
                                 </TableRow>
                             ))
-
                         ) : (
-                            /* Estado: vacío */
                             <TableRow className="hover:bg-transparent border-0">
                                 <TableCell colSpan={5} className="py-16 text-center">
                                     <div className="flex flex-col items-center gap-3">
                                         <div className="w-2 h-2 border border-[#C9A84C]/50 rotate-45" />
                                         <span className="text-[12px] tracking-[0.35em] uppercase text-[#F5F0E8]/40">
-                                            No hay objetos para mostrar
+                                            {verEliminados ? "Papelera vacía" : "No hay objetos disponibles"}
                                         </span>
                                     </div>
                                 </TableCell>
                             </TableRow>
                         )}
-
                     </TableBody>
                 </Table>
             </div>
 
-            {/* Boton regresar */}
+            {/* Footer */}
             <div className="mt-8 flex">
                 <button
                     onClick={() => navigate(-1)}

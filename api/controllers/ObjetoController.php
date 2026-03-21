@@ -63,4 +63,48 @@ class objeto
             
         }
     }
+
+    public function delete($id)
+    {
+        try {
+            $response = new Response();
+            $objetoM = new ObjetoModel();
+            
+            // El modelo debe retornar el resultado del UPDATE
+            $result = $objetoM->delete($id);
+
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
+
+    // Restaurar objeto
+    public function restore($id)
+    {
+        try {
+            $response = new Response();
+            $objetoM = new ObjetoModel();
+            
+            $result = $objetoM->restore($id);
+
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
+
+    public function eliminados()
+{
+    try {
+        $response = new Response();
+        $objetoM = new ObjetoModel();
+
+        $result = $objetoM->getEliminados();
+
+        $response->toJSON($result);
+    } catch (Exception $e) {
+        handleException($e);
+    }
+}
 }

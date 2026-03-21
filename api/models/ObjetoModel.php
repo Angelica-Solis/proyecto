@@ -50,46 +50,43 @@ class ObjetoModel
     //Listado de objetos 
 
     public function ListadoObjetos()
-    {
-        $imgM = new ObjetoImagenModel();
-        $usuarioM = new UsuarioModel();
+{
+    $imgM = new ObjetoImagenModel();
+    $usuarioM = new UsuarioModel();
 
-        $vSql = "SELECT 
+    $vSql = "SELECT 
         id, nombreObjeto, idVendedor, idCondicion, idEstadoObjeto
-        FROM objeto; ";
+        FROM objeto WHERE idEstadoObjeto != 4; ";
 
-        $vResultado = $this->enlace->executeSQL($vSql);
+    $vResultado = $this->enlace->executeSQL($vSql);
 
-        if (!empty($vResultado) && is_array(($vResultado))) {
-            foreach ($vResultado as $objeto) {
-                $objeto->imagenPrincipal = $imgM->getPrimeraImagen($objeto->id);
-                //Categorias
-                $categorias = $this->getCategoriasPorObjeto($objeto->id);
-                $listaCategorias = [];
+    if (!empty($vResultado) && is_array(($vResultado))) {
+        foreach ($vResultado as $objeto) {
+            $objeto->imagenPrincipal = $imgM->getPrimeraImagen($objeto->id);
+            
+            $categorias = $this->getCategoriasPorObjeto($objeto->id);
+            $listaCategorias = [];
 
-                if (!empty($categorias)) {
-                    foreach ($categorias as $cate) {
-                        $listaCategorias[] = $cate->nombreCategoria;
-                    }
+            if (!empty($categorias)) {
+                foreach ($categorias as $cate) {
+                    $listaCategorias[] = $cate->nombreCategoria;
                 }
-                //implode une los elementos de un array en una sola cadena de texto, este se separa en ,
-                $objeto->categorias = implode(',', $listaCategorias);
-
-                //Condicion
-                $objeto->condicion = $this->getCondicion($objeto->idCondicion);
-                //Estado
-                $objeto->estado = $this->getEstado($objeto->idEstadoObjeto);
-                //Duenno
-                $duenno = $usuarioM->get($objeto->idVendedor);
-                $objeto->duenno = $duenno ? $duenno->nombreUsuario : 'No esta definido';
-                // Unset funciona para que elimine una variable o propiedad de un objeto en tiempo de ejecucion
-                unset($objeto->idCondicion, $objeto->idVendedor, $objeto->idEstadoObjeto);
             }
-        } else {
-            $vResultado = [];
+            $objeto->categorias = implode(',', $listaCategorias);
+            $objeto->condicion = $this->getCondicion($objeto->idCondicion);
+            $objeto->estado = $this->getEstado($objeto->idEstadoObjeto);
+            
+            $duenno = $usuarioM->get($objeto->idVendedor);
+            $objeto->duenno = $duenno ? $duenno->nombreUsuario : 'No esta definido';
+            
+            // Elimina SOLO estas propiedades, NO idEstadoObjeto
+            unset($objeto->idCondicion, $objeto->idVendedor);
         }
-        return $vResultado;
+    } else {
+        $vResultado = [];
     }
+    return $vResultado;
+}
     //Estado para el listado de objetos
     public function getEstado($idEstado)
     {
@@ -200,4 +197,79 @@ class ObjetoModel
         //Retornar pelicula
         return $this->get($idObjeto);
     }
+
+    public function delete($id) {
+    try {
+        // 1. Validar si el objeto pertenece a alguna subasta
+        // Estados de subasta: 1=Activa, 2=Finalizada, 3=Cancelada, 4=Borrador
+        $sqlCheck = "SELECT COUNT(*) as conteo FROM subasta 
+                    WHERE idObjeto = $id 
+                    AND idEstadoSubasta IN (1, 2)"; // Activa o Finalizada (ya subastado)
+
+        $check = $this->enlace->executeSQL($sqlCheck);
+
+        if ($check[0]->conteo > 0) {
+            throw new Exception("No se puede eliminar: el objeto ya fue subastado o está en una subasta activa.");
+        }
+
+        // 2. Borrado Lógico: Cambiamos el estado a 'Eliminado' (ID 4)
+        $sql = "UPDATE objeto SET idEstadoObjeto = 4 WHERE id = $id";
+        return $this->enlace->executeSQL_DML($sql);
+
+    } catch (Exception $e) {
+        throw $e;
+    }
+}
+
+public function restore($id) {
+    // Restaurar lo devuelve a estado 'Disponible' (ID 1)
+    $sql = "UPDATE objeto SET idEstadoObjeto = 1 WHERE id = $id";
+    return $this->enlace->executeSQL_DML($sql);
+}
+public function getEliminados()
+{
+    $imgM = new ObjetoImagenModel();
+    $usuarioM = new UsuarioModel();
+    
+    $vSql = "SELECT id, nombreObjeto, idVendedor, idCondicion, idEstadoObjeto 
+             FROM objeto 
+             WHERE idEstadoObjeto = 4 
+             ORDER BY fechaRegistro DESC;";
+    
+    $vResultado = $this->enlace->executeSQL($vSql);
+
+    if (!empty($vResultado) && is_array($vResultado)) {
+        foreach ($vResultado as $objeto) {
+            // Agregar imagen principal
+            $imagenPrincipal = $imgM->getPrimeraImagen($objeto->id);
+            $objeto->imagenPrincipal = $imagenPrincipal ? $imagenPrincipal : null;
+            
+            // Agregar categorías
+            $categorias = $this->getCategoriasPorObjeto($objeto->id);
+            $listaCategorias = [];
+            if (!empty($categorias)) {
+                foreach ($categorias as $cate) {
+                    $listaCategorias[] = $cate->nombreCategoria;
+                }
+            }
+            $objeto->categorias = implode(',', $listaCategorias);
+            
+            // Agregar condición
+            $objeto->condicion = $this->getCondicion($objeto->idCondicion);
+            
+            // Agregar estado
+            $objeto->estado = $this->getEstado($objeto->idEstadoObjeto);
+            
+            // Agregar dueño
+            $duenno = $usuarioM->get($objeto->idVendedor);
+            $objeto->duenno = $duenno ? $duenno->nombreUsuario : 'No esta definido';
+            
+            // Limpiar propiedades innecesarias pero mantener idEstadoObjeto
+            unset($objeto->idCondicion, $objeto->idVendedor);
+        }
+    } else {
+        $vResultado = [];
+    }
+    return $vResultado;
+}
 }
