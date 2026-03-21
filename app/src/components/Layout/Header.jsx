@@ -177,32 +177,6 @@ export default function Header() {
                 ))}
               </MenubarContent>
             </MenubarMenu>
-
-            {/* Mantenimiento */}
-            <MenubarMenu>
-              <MenubarTrigger style={triggerStyle}
-                onMouseEnter={e => e.currentTarget.style.color = G.gold}
-                onMouseLeave={e => e.currentTarget.style.color = G.whiteDim}
-              >
-                <Layers className="h-3 w-3" style={{ color: G.gold }} />
-                Mantenimientos
-                <ChevronDown className="h-3 w-3" />
-              </MenubarTrigger>
-              <MenubarContent style={dropdownStyle}>
-                {mantenimientoItems.map(item => (
-                  <MenubarItem key={item.href} asChild>
-                    <Link to={item.href} style={dropItemStyle}
-                      onMouseEnter={e => { e.currentTarget.style.color = G.gold; e.currentTarget.style.background = G.goldGhost; }}
-                      onMouseLeave={e => { e.currentTarget.style.color = G.whiteDim; e.currentTarget.style.background = "transparent"; }}
-                    >
-                      <span style={{ color: G.gold }}>{item.icon}</span>
-                      {item.title}
-                    </Link>
-                  </MenubarItem>
-                ))}
-              </MenubarContent>
-            </MenubarMenu>
-
             {/* Usuarios */}
             <MenubarMenu>
               <MenubarTrigger style={triggerStyle}

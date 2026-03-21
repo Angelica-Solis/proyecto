@@ -39,5 +39,5 @@ app/node_modules/
 app/dist/
 app/dist-ssr/
 app/*.local
-
+api/models/htdocs/
 # ==========================================
