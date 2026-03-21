@@ -184,14 +184,13 @@ public function create($objeto)
 {
     try {
         // 1. LIMPIEZA TÉCNICA DE FECHAS
-        // HTML5 envía 'T' entre fecha y hora; MySQL requiere espacio
         $fInicioRaw = str_replace('T', ' ', $objeto->fechaInicio);
         $fCierreRaw = str_replace('T', ' ', $objeto->fechaCierre);
 
         // A. VALIDACIÓN DE FECHAS (Tu lógica original intacta)
         $ahora = new DateTime();
-        $fInicio = new DateTime($fInicioRaw);
-        $fCierre = new DateTime($fCierreRaw);
+        $fInicio = DateTime::createFromFormat('Y-m-d H:i', $fInicioRaw);
+        $fCierre = DateTime::createFromFormat('Y-m-d H:i', $fCierreRaw);
 
         if ($fInicio < $ahora) {
             throw new Exception("La fecha de inicio no puede ser anterior a la actual.");
@@ -229,8 +228,8 @@ public function create($objeto)
         }
 
         // D. ACTUALIZAR ESTADO DEL OBJETO
-        $sqlObjeto = "UPDATE objeto SET idEstadoObjeto = 3 WHERE id = $objeto->idObjeto";
-        $this->enlace->executeSQL($sqlObjeto);
+        $sqlObjeto = "UPDATE objeto SET idEstadoObjeto = 2 WHERE id = $objeto->idObjeto";
+        $this->enlace->executeSQL_DML($sqlObjeto);
 
         return $this->get($idSubasta);
 
@@ -252,7 +251,7 @@ public function publicar($id) {
     }
 
     $vSql = "UPDATE subasta SET idEstadoSubasta = 1 WHERE id = $id;";
-    return $this->enlace->executeSQL($vSql);
+    return $this->enlace->executeSQL_DML($vSql);
 }
 //cancelar subasta
 public function cancelar($id) {
@@ -270,7 +269,7 @@ public function cancelar($id) {
     }
 
     $vSql = "UPDATE subasta SET idEstadoSubasta = 3 WHERE id = $id;"; // 3 = Cancelada
-    return $this->enlace->executeSQL($vSql);
+    return $this->enlace->executeSQL_DML($vSql);
 }
 // Listar todas las subastas
 public function all()
@@ -289,26 +288,55 @@ public function all()
 // Editar subasta (solo si está en estado Borrador)
 public function update($objeto)
 {
-    // Validar regla de negocio: Solo editar si es borrador (Estado 4)
-    $subastaActual = $this->get($objeto->id);
-    if($subastaActual->idEstadoSubasta != 4){
-        throw new Exception("No se puede editar una subasta que ya ha sido publicada o cancelada.");
+    try {
+        // 1. Definir la zona horaria una sola vez para evitar conflictos
+        $tz = new DateTimeZone('America/Costa_Rica');
+        $ahora = new DateTime("now", $tz);
+
+        $subastaActual = $this->get($objeto->id);
+        $cantidadPujas = $this->countPujas($objeto->id);
+
+        // 2. Parsear la fecha de BD (MySQL la guarda sin TZ, hay que asignársela)
+        $fechaInicioActual = new DateTime($subastaActual->fechaInicio, $tz);
+
+        if ($fechaInicioActual <= $ahora) {
+            throw new Exception("No se puede editar una subasta que ya está en curso.");
+        }
+
+        if ($cantidadPujas > 0) {
+            throw new Exception("No se puede editar: esta subasta ya tiene pujas.");
+        }
+
+        // 3. Crear las NUEVAS fechas usando explícitamente la misma zona horaria ($tz)
+        $fInicioNueva = new DateTime(str_replace('T', ' ', $objeto->fechaInicio), $tz);
+        $fCierreNueva = new DateTime(str_replace('T', ' ', $objeto->fechaCierre), $tz);
+        
+        // --- VALIDACIÓN QUE ESTABA FALLANDO ---
+        if ($fInicioNueva < $ahora) {
+            throw new Exception("La nueva fecha de inicio no puede ser anterior a la actual.");
+        }
+
+        if ($fCierreNueva <= $fInicioNueva) {
+            throw new Exception("La nueva fecha de cierre debe ser posterior a la de inicio.");
+        }
+
+        $fInicioSQL = $fInicioNueva->format('Y-m-d H:i:s');
+        $fCierreSQL = $fCierreNueva->format('Y-m-d H:i:s');
+
+        // 4. Update (Verifica si el campo es incrementoMinimo o montoIncremento)
+        $vSql = "UPDATE subasta SET 
+                    fechaInicio = '$fInicioSQL',
+                    fechaCierre = '$fCierreSQL',
+                    precioBase = $objeto->precioBase,
+                    incrementoMinimo = $objeto->incremento 
+                    WHERE id = $objeto->id;";
+        
+        $this->enlace->executeSQL_DML($vSql);
+
+        return $this->get($objeto->id);
+
+    } catch (Exception $e) {
+        throw $e;
     }
-
-    //Formatear fechas antes del UPDATE
-    $fechaInicio = date('Y-m-d H:i:s', strtotime($objeto->fechaInicio));
-    $fechaCierre = date('Y-m-d H:i:s', strtotime($objeto->fechaCierre));
-
-    $vSql = "UPDATE subasta SET 
-            fechaInicio = '$objeto->fechaInicio',
-            fechaCierre = '$objeto->fechaCierre',
-            precioBase = $objeto->precioBase,
-            incremento = $objeto->incremento
-            WHERE id = $objeto->id;";
-
-    $this->enlace->executeSQL_DML($vSql);
-
-    // Retornar el objeto actualizado
-    return $this->get($objeto->id);
 }
 }

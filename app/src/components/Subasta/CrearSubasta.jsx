@@ -59,8 +59,8 @@ export function CrearSubasta() {
     //todo salió bien
     toast.success("Subasta guardada como borrador");
     
-    // Opcional: un pequeño delay para que el usuario lea el éxito antes de irse
-    setTimeout(() => navigate("/mantenimiento/subastas"), 1500);
+    // pequeño delay para que el usuario lea el éxito antes de irse
+    setTimeout(() => navigate("/subastas"), 1500);
 
   } catch (error) {
     // 3. CAPTURA DETALLADA DEL ERROR

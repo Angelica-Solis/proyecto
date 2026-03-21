@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Info, Edit, Rocket, XCircle, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Info, Edit, Rocket, XCircle, Plus, Trash2, Ban } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import subastaService from "@/services/SubastaService";
 import { toast } from "sonner";
@@ -65,13 +65,13 @@ export function SubastaTable() {
     };
 
     const handleDelete = async (id) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar este borrador? Esta acción no se puede deshacer.")) {
+    if (window.confirm("¿Estás seguro de que deseas cancelar esta subasta? Esta acción no se puede deshacer.")) {
         try {
-            await subastaService.delete(id); // Asegúrate de que tu service tenga el método delete
-            toast.success("Borrador eliminado correctamente");
+            await subastaService.cancelar(id);
+            toast.success("Subasta cancelada correctamente");
             cargarSubastas();
         } catch (error) {
-            toast.error(error.response?.data?.message || "No se pudo eliminar el borrador");
+            toast.error(error.response?.data?.message || "No se pudo cancelar la subasta");
         }
     }
 };
@@ -126,12 +126,14 @@ export function SubastaTable() {
                     </div>
 
                     {/* Botón Crear */}
-                    <Button 
-                        onClick={() => navigate("/mantenimiento/subastas/crear")}
-                        className="h-9 rounded-none bg-[#C9A84C] hover:bg-[#A68A3D] text-black text-[11px] tracking-[0.2em] font-bold px-6 transition-all duration-300"
-                    >
-                        <Plus className="mr-2 h-4 w-4" /> NUEVA SUBASTA
-                    </Button>
+                    {filtro === "mantenimiento" && (
+                        <Button 
+                            onClick={() => navigate("/mantenimiento/subastas/crear")}
+                            className="h-9 rounded-none bg-[#C9A84C] hover:bg-[#A68A3D] text-black text-[11px] tracking-[0.2em] font-bold px-6 transition-all duration-300"
+                        >
+                            <Plus className="mr-2 h-4 w-4" /> NUEVA SUBASTA
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -210,17 +212,17 @@ export function SubastaTable() {
                                                             </span>
                                                         </div>
 
-                                                        {/* Botón Eliminar Borrador */}
+                                                        {/* Botón Cancelar Borrador */}
                                                         <div className="group relative">
                                                             <Button 
                                                                 size="icon" variant="ghost" 
                                                                 className="h-8 w-8 rounded-none border border-red-500/20 text-red-400 hover:border-red-500 hover:bg-red-500/10 transition-all duration-300"
                                                                 onClick={() => handleDelete(item.id)}
                                                             >
-                                                                <Trash2 className="h-4 w-4" />
+                                                                <Ban className="h-4 w-4" />
                                                             </Button>
                                                             <span className="absolute bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-red-600 text-white text-[9px] font-medium tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap pointer-events-none">
-                                                                Eliminar
+                                                                Cancelar Subasta
                                                             </span>
                                                         </div>
                                                     </>
