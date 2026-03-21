@@ -165,9 +165,39 @@ class ObjetoModel
         return (!empty($res)) ? $res[0]->descripcionEstado : null;
     }
 
-public function getActivos() {
-    $vSQL = "SELECT id, nombreObjeto FROM objeto WHERE idEstadoObjeto = 1 ORDER BY nombreObjeto DESC;";
-    $vResultado = $this->enlace->ExecuteSQL($vSQL);
-    return $vResultado;
-}
+    public function getActivos()
+    {
+        $vSQL = "SELECT id, nombreObjeto FROM objeto WHERE idEstadoObjeto = 1 ORDER BY nombreObjeto DESC;";
+        $vResultado = $this->enlace->ExecuteSQL($vSQL);
+        return $vResultado;
+    }
+
+    // Crea el objeto
+    public function create($objeto)
+    {
+
+        if (empty($objeto->nombreObjeto)) throw new Exception("Nombre obligatorio");
+        // string lenght = strlen
+        if (strlen($objeto->descripcionObjeto) < 20) throw new Exception("Descripción mínima 20 caracteres");
+        //Consulta sql
+        $sql = "INSERT INTO objeto (nombreObjeto, descripcionObjeto, idCondicion, idEstadoObjeto, idVendedor, fechaRegistro)" .
+            " VALUES ('$objeto->nombreObjeto','$objeto->descripcionObjeto',
+                    '$objeto->idCondicion','$objeto->idEstadoObjeto','$objeto->idVendedor', NOW())";
+
+        //Obtener ultimo insert
+        $idObjeto = $this->enlace->executeSQL_DML_last($sql);
+        // categorias 
+        //Crear elementos a insertar en categorias
+        if (empty($objeto->categorias)) throw new Exception("Debe tener al menos una categoría");
+        foreach ($objeto->categorias as $value) {
+            $sql = "INSERT INTO objeto_categoria(idObjeto,idCategoria)" .
+                "VALUES($idObjeto,$value)";
+            $vResultadoCat = $this->enlace->executeSQL_DML($sql);
+        }
+        // imagen
+            $sql = "INSERT INTO objeto_imagen(idObjeto, nombreImagen) VALUES($idObjeto, '$imagen')";
+            $vResultadoImg = $this->enlace->executeSQL_DML($sql);
+        //Retornar pelicula
+        return $this->get($idObjeto);
+    }
 }

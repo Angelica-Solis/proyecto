@@ -75,6 +75,7 @@ export function UpdateUser() {
         } catch (err) {
             console.error(err);
             console.error("ERROR COMPLETO:", err.response?.data);
+            if (err.name !== "AbortError") setError(err.message);
         }
     };
 

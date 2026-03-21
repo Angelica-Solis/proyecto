@@ -37,7 +37,7 @@ require_once "controllers/RolController.php";
 require_once "controllers/StatusController.php";
 require_once "controllers/UsuarioController.php";
 require_once "controllers/ObjetoController.php";
-
+require_once "controllers/ImagenObjetoController.php";
 //Enrutador
 require_once "routes/RoutesController.php";
 $index = new RoutesController();

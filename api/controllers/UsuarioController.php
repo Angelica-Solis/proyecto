@@ -47,7 +47,7 @@ class user
         }
     }
 
-    //Update de usuario
+    //Update de usuario put
     public function update($id)
     {
         try {

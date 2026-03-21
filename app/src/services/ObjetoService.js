@@ -8,12 +8,16 @@ class ObjetoService {
     return axios.get(BASE_URL + '/ListadoObjetos/');
   }
 
-  getDetalleObjeto(id){
-    return axios.get(BASE_URL + '/DetalleObjeto/'+ id);
+  getDetalleObjeto(id) {
+    return axios.get(BASE_URL + '/DetalleObjeto/' + id);
   }
   getActivos() {
-        return axios.get(BASE_URL + '/activos/');
-    }
+    return axios.get(BASE_URL + '/activos/');
+  }
+
+  createObjeto(objeto) {
+    return axios.post(BASE_URL, JSON.stringify(objeto));
+  }
 };
 
 export default new ObjetoService();

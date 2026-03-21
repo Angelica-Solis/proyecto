@@ -95,6 +95,7 @@ class UsuarioModel
         return null;
     }
 
+    // Update al usuario
     public function update($usuario)
     {
 
