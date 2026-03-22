@@ -57,6 +57,7 @@ useEffect(() => {
         try {
             await objetooService.restore(id);
             toast.success("Objeto restaurado");
+            setVerEliminados(false); // Volver a la vista de activos después de restaurar
             cargarObjetos();
         } catch (error) {
             toast.error("No se pudo restaurar el objeto");
@@ -65,7 +66,7 @@ useEffect(() => {
 
     // Lógica de filtrado: ID 4 es "Eliminado"
     const objetosFiltrados = data.filter(obj => 
-        verEliminados ? obj.idEstadoObjeto === 4 : obj.idEstadoObjeto !== 4
+        verEliminados ? obj.idEstadoObjeto === '4' : obj.idEstadoObjeto !== '4'
     );
 
     return (
@@ -188,14 +189,22 @@ useEffect(() => {
                                     <TableCell className="py-3 pr-4">
                                         <div className="flex items-center justify-end gap-2">
                                             {verEliminados ? (
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    onClick={() => handleRestore(objetoo.id)}
-                                                    className="w-8 h-8 p-0 rounded-none border border-green-500/20 text-green-500/70 hover:border-green-500 hover:text-green-500 hover:bg-green-500/10 transition-all duration-300"
-                                                >
-                                                    <RotateCcw className="h-4 w-4" />
-                                                </Button>
+                                                <div className="group relative">
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() => handleRestore(objetoo.id)}
+                                                        className="w-8 h-8 p-0 rounded-none border border-green-500/20 text-green-500/70 hover:border-green-500 hover:text-green-500 hover:bg-green-500/10 transition-all duration-300"
+                                                    >
+                                                        <RotateCcw className="h-4 w-4" />
+                                                    </Button>
+
+                                                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-[10px] 
+                                                        bg-green-500 text-white opacity-0 group-hover:opacity-100 
+                                                        transition whitespace-nowrap">
+                                                        Restaurar
+                                                    </span>
+                                                </div>
                                             ) : (
                                                 <>
                                                     <Button
