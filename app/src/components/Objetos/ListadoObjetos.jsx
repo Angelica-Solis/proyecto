@@ -57,6 +57,7 @@ useEffect(() => {
         try {
             await objetooService.restore(id);
             toast.success("Objeto restaurado");
+            setVerEliminados(false); // Volver a la vista de activos después de restaurar
             cargarObjetos();
         } catch (error) {
             toast.error("No se pudo restaurar el objeto");
@@ -65,7 +66,7 @@ useEffect(() => {
 
     // Lógica de filtrado: ID 4 es "Eliminado"
     const objetosFiltrados = data.filter(obj => 
-        verEliminados ? obj.idEstadoObjeto === 4 : obj.idEstadoObjeto !== 4
+        verEliminados ? obj.idEstadoObjeto === '4' : obj.idEstadoObjeto !== '4'
     );
 
     return (
@@ -188,42 +189,79 @@ useEffect(() => {
                                     <TableCell className="py-3 pr-4">
                                         <div className="flex items-center justify-end gap-2">
                                             {verEliminados ? (
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    onClick={() => handleRestore(objetoo.id)}
-                                                    className="w-8 h-8 p-0 rounded-none border border-green-500/20 text-green-500/70 hover:border-green-500 hover:text-green-500 hover:bg-green-500/10 transition-all duration-300"
-                                                >
-                                                    <RotateCcw className="h-4 w-4" />
-                                                </Button>
+                                                <div className="group relative">
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() => handleRestore(objetoo.id)}
+                                                        className="w-8 h-8 p-0 rounded-none border border-green-500/20 text-green-500/70 hover:border-green-500 hover:text-green-500 hover:bg-green-500/10 transition-all duration-300"
+                                                    >
+                                                        <RotateCcw className="h-4 w-4" />
+                                                    </Button>
+
+                                                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-[10px] 
+                                                        bg-green-500 text-white opacity-0 group-hover:opacity-100 
+                                                        transition whitespace-nowrap">
+                                                        Restaurar
+                                                    </span>
+                                                </div>
                                             ) : (
                                                 <>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        asChild
-                                                        className="w-8 h-8 p-0 rounded-none border border-[#C9A84C]/20 text-[#F5F0E8]/50 hover:border-[#C9A84C] hover:text-[#C9A84C] hover:bg-[#C9A84C]/[0.07] transition-all duration-300"
-                                                    >
-                                                        <Link to={`/objeto/detalle/${objetoo.id}`}>
-                                                            <Info className="h-4 w-4" />
-                                                        </Link>
-                                                    </Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        onClick={() => navigate(`/objeto/editar/${objetoo.id}`)}
-                                                        className="w-8 h-8 p-0 rounded-none border border-[#4A9EFF]/20 text-[#4A9EFF]/70 hover:border-[#4A9EFF] hover:text-[#4A9EFF] hover:bg-[#4A9EFF]/[0.1] transition-all duration-300"
-                                                    >
-                                                        <Edit className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        onClick={() => handleDelete(objetoo.id)}
-                                                        className="w-8 h-8 p-0 rounded-none border border-[#FF4A4A]/20 text-[#FF4A4A]/70 hover:border-[#FF4A4A] hover:text-[#FF4A4A] hover:bg-[#FF4A4A]/[0.1] transition-all duration-300"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    {/* VER DETALLE */}
+                                                        <div className="group relative">
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                asChild
+                                                                className="w-8 h-8 p-0 rounded-none border border-[#C9A84C]/20 text-[#F5F0E8]/50 hover:border-[#C9A84C] hover:text-[#C9A84C] hover:bg-[#C9A84C]/[0.07] transition-all duration-300"
+                                                            >
+                                                                <Link to={`/objeto/detalle/${objetoo.id}`}>
+                                                                    <Info className="h-4 w-4" />
+                                                                </Link>
+                                                            </Button>
+
+                                                            <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-[10px] 
+                                                                bg-[#C9A84C] text-[#080807] opacity-0 group-hover:opacity-100 
+                                                                transition whitespace-nowrap">
+                                                                Ver detalle
+                                                            </span>
+                                                        </div>
+
+                                                        {/* MODIFICAR */}
+                                                        <div className="group relative">
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                onClick={() => navigate(`/objeto/editar/${objetoo.id}`)}
+                                                                className="w-8 h-8 p-0 rounded-none border border-[#4A9EFF]/20 text-[#4A9EFF]/70 hover:border-[#4A9EFF] hover:text-[#4A9EFF] hover:bg-[#4A9EFF]/[0.1] transition-all duration-300"
+                                                            >
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+
+                                                            <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-[10px] 
+                                                                bg-[#4A9EFF] text-white opacity-0 group-hover:opacity-100 
+                                                                transition whitespace-nowrap">
+                                                                Modificar
+                                                            </span>
+                                                        </div>
+
+                                                        {/* ELIMINAR */}
+                                                        <div className="group relative">
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                onClick={() => handleDelete(objetoo.id)}
+                                                                className="w-8 h-8 p-0 rounded-none border border-[#FF4A4A]/20 text-[#FF4A4A]/70 hover:border-[#FF4A4A] hover:text-[#FF4A4A] hover:bg-[#FF4A4A]/[0.1] transition-all duration-300"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+
+                                                            <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-[10px] 
+                                                                bg-[#FF4A4A] text-white opacity-0 group-hover:opacity-100 
+                                                                transition whitespace-nowrap">
+                                                                Eliminar
+                                                            </span>
+                                                        </div>
                                                 </>
                                             )}
                                         </div>
