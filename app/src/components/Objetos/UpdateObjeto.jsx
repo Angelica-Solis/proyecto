@@ -19,6 +19,7 @@ import { Plus, Save, ArrowLeft, Tag, AlignLeft, ToggleLeft, Eye, User, ImageIcon
 import objetoService from "../../services/ObjetoService";
 import ImageService from "../../services/ImageService";
 import userService from "../../services/UserService";
+import categoriaService from "../../services/CategoriaService";
 
 // componentes reutilizables
 import { CustomMultiSelect } from "../ui/custom/custom-multiple-select";
@@ -56,7 +57,29 @@ export function UpdateObjeto() {
         },
         resolver: yupResolver(objetoSchema),
     });
+    // Traer categorias
+    useEffect(() => {
+        const fetchCategorias = async () => {
+            try {
+                const res = await categoriaService.getCategorias();
 
+                const categorias = res.data.data.map(c => ({
+                    ...c,
+                    id: parseInt(c.id)
+                }));
+
+                console.log("Categorias:", categorias);
+
+                setCategorias(categorias);
+            } catch (err) {
+                console.error("Error cargando categorías:", err);
+            }
+        };
+
+        fetchCategorias();
+    }, []);
+
+    //Definir vendedor 
     useEffect(() => {
         const fetchVendedor = async () => {
             try {
@@ -90,9 +113,12 @@ export function UpdateObjeto() {
                         idCondicion: objeto.idCondicion,
                         idEstadoObjeto: objeto.idEstadoObjeto,
                         idVendedor: objeto.idVendedor,
-                        categorias: objeto.categorias.map(c => c.id)
+                        categorias: objeto.categorias.map(c => parseInt(c.id))
                     });
-                    if (objeto.imagen) setFileURL(BASE_URL_image + "/" + objeto.imagen.image);
+                    if (objeto.imagenes && objeto.imagenes.length > 0) {
+                        setFileURL(`${BASE_URL_image}/${objeto.imagenes[0].nombreImagen}`);
+                    }
+                    console.log("OBJETO COMPLETO:", objeto);
                 }
             } catch (err) {
                 if (err.name !== "AbortError") setError(err.message);
@@ -101,27 +127,38 @@ export function UpdateObjeto() {
         fetchData();
     }, [BASE_URL_image, id, reset]);
 
+    // Envio del formulario
     const onSubmit = async (dataForm) => {
         try {
-            const isValid = await objetoSchema.isValid(dataForm);
-            if (!isValid) return;
+            const dataToSend = {
+                ...dataForm,
+                id: parseInt(id)
+            };
 
-            const response = await objetoService.getUpdateObjeto(dataForm);
+            console.log("DATA A ENVIAR:", dataToSend);
+
+            const response = await objetoService.getUpdateObjeto(dataToSend);
+
             if (response.data) {
                 if (file) {
                     const formData = new FormData();
                     formData.append("file", file);
                     formData.append("objeto_id", response.data.data.id);
+
                     await ImageService.createImage(formData);
                 }
-                toast.success(`Objeto actualizado ${response.data.data.id} - ${response.data.data.title}`, { duration: 3000 });
+
+                toast.success(`Objeto actualizado ${response.data.data.id}`, {
+                    duration: 3000
+                });
+
                 navigate("/objeto/table");
-            } else if (response.error) {
-                setError(response.error);
             }
+
         } catch (err) {
             console.error(err);
             setError("Error al actualizar el objeto");
+            toast.error("Error al actualizar el objeto");
         }
     };
 
@@ -279,21 +316,49 @@ export function UpdateObjeto() {
 
                         {/* Categorías */}
                         <div>
+                            <label className={labelCls}>Categorías</label>
+
                             <Controller
                                 name="categorias"
                                 control={control}
                                 render={({ field }) => (
-                                    <CustomMultiSelect
-                                        field={field}
-                                        data={dataCategorias}
-                                        label="Categorías"
-                                        getOptionLabel={(item) => item.nombreCategoria}
-                                        getOptionValue={(item) => item.id}
-                                        placeholder="Seleccione categorías"
-                                        error={errors.categorias?.message}
-                                    />
+                                    <div className="space-y-2">
+                                        {dataCategorias.map((categoria) => (
+                                            <label
+                                                key={categoria.id}
+                                                className="flex items-center gap-3 p-2 border border-[#C9A84C]/20 cursor-pointer"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    value={categoria.id}
+                                                    checked={field.value?.includes(categoria.id)}
+                                                    onChange={(e) => {
+                                                        const checked = e.target.checked;
+                                                        const value = parseInt(e.target.value);
+
+                                                        if (checked) {
+                                                            field.onChange([
+                                                                ...(field.value || []),
+                                                                value
+                                                            ]);
+                                                        } else {
+                                                            field.onChange(
+                                                                field.value.filter(id => id !== value)
+                                                            );
+                                                        }
+                                                    }}
+                                                />
+
+                                                <span>{categoria.nombreCategoria}</span>
+                                            </label>
+                                        ))}
+                                    </div>
                                 )}
                             />
+
+                            {errors.categorias && (
+                                <p className={errorCls}>{errors.categorias.message}</p>
+                            )}
                         </div>
 
                         {/* Divider */}

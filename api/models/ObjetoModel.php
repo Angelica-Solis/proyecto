@@ -39,7 +39,7 @@ class ObjetoModel
 
     private function getCategoriasPorObjeto($idObjeto)
     {
-            $sql = "SELECT c.id, c.nombreCategoria 
+        $sql = "SELECT c.id, c.nombreCategoria 
             FROM categoria c
             INNER JOIN objeto_categoria oc ON c.id = oc.idCategoria
             WHERE oc.idObjeto = $idObjeto";
@@ -297,6 +297,16 @@ class ObjetoModel
                 " Values($objeto->id,$item)";
             $vResultadoG = $this->enlace->executeSQL_DML($sql);
         }
+
+        if (!empty($objeto->imagenPrincipal)) {
+        // Eliminar imagen previa
+        $sql = "DELETE FROM objeto_imagen WHERE idObjeto = $objeto->id";
+        $this->enlace->executeSQL_DML($sql);
+
+        // Insertar la nueva imagen
+        $sql = "INSERT INTO objeto_imagen (idObjeto, nombreImagen) VALUES ($objeto->id, '$objeto->nombreImagen')";
+        $this->enlace->executeSQL_DML($sql);
+    }
 
         //Retornar objeto
         return $this->get($objeto->id);

@@ -76,8 +76,8 @@ export function CreateObjeto() {
         defaultValues: {
             nombreObjeto: "",
             descripcionObjeto: "",
-            duenno: usuarioActual,
-            idCondicion: "",
+            idVendedor: usuarioActual,
+            idCondicion: 0,
             idEstadoObjeto: 1, // Disponible por defecto
             categorias: []
         },
@@ -437,12 +437,11 @@ export function CreateObjeto() {
                             Regresar
                         </Button>
 
-                        <Button
-                            type="submit"
-                            className="flex items-center gap-2 border border-[#C9A84C] bg-[#C9A84C] text-[#080807] hover:bg-[#C9A84C]/90 transition-all duration-300 text-[9px] tracking-[0.3em] uppercase font-medium px-8 h-10"
-                        >
-                            <Save className="w-4 h-4" />
-                            Guardar Cambios
+                        <Button asChild className="flex items-center gap-2 border border-[#C9A84C] bg-[#C9A84C] text-[#080807] hover:bg-[#C9A84C]/90 transition-all duration-300 text-[9px] tracking-[0.3em] uppercase font-medium px-8 h-10">
+                            <button type="submit">
+                                <Save className="w-4 h-4" />
+                                Guardar Cambios
+                            </button>
                         </Button>
                     </div>
                 </form>
