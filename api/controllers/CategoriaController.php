@@ -3,7 +3,7 @@
 class categoria
 {
 
-    public function getCategorias()
+    public function index()
     {
         try {
             $response = new Response();

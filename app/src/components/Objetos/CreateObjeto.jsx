@@ -60,6 +60,10 @@ export function CreateObjeto() {
         categorias: yup.array()
             .min(1, 'Seleccione al menos una categoría')
             .required('Las categorías son requeridas'),
+
+        imagen: yup
+            .mixed()
+            .required("Debes subir una imagen")
     });
 
     /*** React Hook Form ***/
@@ -92,7 +96,16 @@ export function CreateObjeto() {
         const fetchCategorias = async () => {
             try {
                 const res = await categoriaService.getCategorias();
-                setCategoriasOpciones(res.data.data.categorias);
+
+                const categorias = res.data.data.map(c => ({
+                    ...c,
+                    id: parseInt(c.id)
+                }));
+
+                console.log("Categorias:", categorias);
+
+                setCategoriasOpciones(categorias);
+
             } catch (err) {
                 console.error("Error cargando categorías:", err);
             }
@@ -105,8 +118,17 @@ export function CreateObjeto() {
     useEffect(() => {
         const fetchCondiciones = async () => {
             try {
-                const res = await condicionService.getCondiciones();
-                setCondicionOpciones(res.data.data);
+                const res = await condicionService.getCondicion();
+
+                const condiciones = res.data.data.map(c => ({
+                    ...c,
+                    id: parseInt(c.id)
+                }));
+
+                console.log("Condiciones:", condiciones);
+
+                setCondicionOpciones(condiciones);
+
             } catch (err) {
                 console.error("Error cargando condiciones:", err);
             }

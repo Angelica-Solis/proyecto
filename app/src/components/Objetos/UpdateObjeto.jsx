@@ -85,10 +85,10 @@ export function UpdateObjeto() {
                 if (objetoRes.data) {
                     const objeto = objetoRes.data.data;
                     reset({
-                        nombreObjeto: objeto.title,
-                        descripcionObjeto: objeto.year,
-                        idCondicion: objeto.time,
-                        idEstadoObjeto: objeto.lang,
+                        nombreObjeto: objeto.nombreObjeto,
+                        descripcionObjeto: objeto.descripcionObjeto,
+                        idCondicion: objeto.idCondicion,
+                        idEstadoObjeto: objeto.idEstadoObjeto,
                         idVendedor: objeto.idVendedor,
                         categorias: objeto.categorias.map(c => c.id)
                     });

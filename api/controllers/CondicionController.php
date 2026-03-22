@@ -3,7 +3,7 @@
 class condicion
 {
 
-    public function getCondicion()
+    public function index()
     {
         try {
             $response = new Response();
