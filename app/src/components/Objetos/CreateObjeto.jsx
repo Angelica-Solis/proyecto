@@ -131,7 +131,10 @@ export function CreateObjeto() {
                     formData.append("file", file);
                     formData.append("objeto_id", objetoId);
 
-                    await ImageService.createImage(formData);
+                    console.log("Enviando imagen:", file);
+
+                    const res = await ImageService.createImage(formData);
+                    console.log("Respuesta imagen:", res.data);
                 }
 
                 // Notificar
@@ -172,7 +175,7 @@ export function CreateObjeto() {
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    {/* Nombre del Objeto */}
+                    {/* Nombre del objeto */}
                     <div>
                         <Label className="block mb-2 text-[#C9A84C] text-[11px] font-medium tracking-[0.2em] uppercase">
                             <span className="text-[#F5F0E8]">📦</span> Nombre del Objeto
@@ -193,7 +196,6 @@ export function CreateObjeto() {
                         )}
                     </div>
 
-                    {/* Grid: Dueño y Condición */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         {/* Dueño */}
                         <div>
@@ -258,7 +260,7 @@ export function CreateObjeto() {
                         </div>
                     </div>
 
-                    {/* Estado (readonly - siempre Disponible) */}
+                    {/* Estado */}
                     <div>
                         <Label className="block mb-2 text-[#C9A84C] text-[11px] font-medium tracking-[0.2em] uppercase">
                             <span className="text-[#F5F0E8]">📊</span> Estado
@@ -278,7 +280,7 @@ export function CreateObjeto() {
                         <p className="text-xs text-[#F5F0E8]/40 mt-1">Este campo está fijo en Disponible para nuevos objetos</p>
                     </div>
 
-                    {/* Categorías (Multi-select con checkboxes) */}
+                    {/* Categorías */}
                     <div>
                         <Label className="block mb-2 text-[#C9A84C] text-[11px] font-medium tracking-[0.2em] uppercase">
                             <span className="text-[#F5F0E8]">🏷️</span> Categorías

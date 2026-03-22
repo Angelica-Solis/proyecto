@@ -191,10 +191,7 @@ class ObjetoModel
                 "VALUES($idObjeto,$value)";
             $vResultadoCat = $this->enlace->executeSQL_DML($sql);
         }
-        // imagen
-            $sql = "INSERT INTO objeto_imagen(idObjeto, nombreImagen) VALUES($idObjeto, '$imagen')";
-            $vResultadoImg = $this->enlace->executeSQL_DML($sql);
-        //Retornar pelicula
+        //Retornar objeto
         return $this->get($idObjeto);
     }
 
