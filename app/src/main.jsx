@@ -20,6 +20,7 @@ import { CrearSubasta } from "./components/Subasta/CrearSubasta";
 import { UpdateUser } from './components/User/UserUpdate';
 import { CreateObjeto } from './components/Objetos/CreateObjeto';
 import {EditarSubasta} from './components/Subasta/EditarSubasta';
+import { UpdateObjeto } from './components/Objetos/UpdateObjeto';
 
 
 const rutas = createBrowserRouter([
@@ -45,6 +46,7 @@ const rutas = createBrowserRouter([
       { path: "objeto/create", element: <CreateObjeto /> },
       { path: "user/detail/:id", element: <UserDetail /> },
       { path: "user/update/:id", element: <UpdateUser /> },
+      { path: "objeto/update/:id", element: <UpdateObjeto /> },
       { path: "objeto/detalle/:id", element: <ObjetoDetalle /> },
       { path: "subasta/detalle/:id", element: <SubastaDetalle /> },
       //ruta para mantenimiento y edición de subastas

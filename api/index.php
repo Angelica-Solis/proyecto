@@ -27,6 +27,8 @@ require_once "models/UsuarioModel.php";
 require_once "models/RolModel.php";
 require_once "models/StatusModel.php";
 require_once "models/PujaModel.php";
+require_once "models/CategoriaModel.php";
+require_once "models/CondicionModel.php";
 
 
 
@@ -38,6 +40,8 @@ require_once "controllers/StatusController.php";
 require_once "controllers/UsuarioController.php";
 require_once "controllers/ObjetoController.php";
 require_once "controllers/ImagenObjetoController.php";
+require_once "controllers/CategoriaController.php";
+require_once "controllers/CondicionController.php";
 //Enrutador
 require_once "routes/RoutesController.php";
 $index = new RoutesController();

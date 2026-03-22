@@ -28,6 +28,14 @@ class ObjetoService {
     getEliminados() {
         return axios.get(`${BASE_URL}/eliminados`);
     }
+
+      getUpdateObjeto(objeto) {
+    return axios.put(BASE_URL + '/update/' + objeto.id, objeto);
+  }
+
+    getObjetoById(ObjetoId) {
+    return axios.get(BASE_URL + '/' + ObjetoId);
+  }
 };
 
 export default new ObjetoService();

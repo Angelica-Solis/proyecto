@@ -26,6 +26,8 @@ import { Save, ArrowLeft, Upload, X } from "lucide-react";
 import objetoService from "../../services/ObjetoService";
 import ImageService from "../../services/ImageService";
 import userService from "../../services/UserService";
+import categoriaService from "../../services/CategoriaService";
+import condicionService from "../../services/CondicionService";
 
 export function CreateObjeto() {
     const navigate = useNavigate();
@@ -37,19 +39,8 @@ export function CreateObjeto() {
     const [fileURL, setFileURL] = useState(null);
     const usuarioActual = 1; //idvendedor 
     const [vendedor, setVendedor] = useState({ id: 0, nombre: "" });
-    // Opciones para los selects (normalmente vendrían de la BD)
-    const categoriasOpciones = [
-        { id: 1, nombre: "Clásicos de colección" },
-        { id: 2, nombre: "Ediciones limitadas" },
-        { id: 3, nombre: "Sedanes premium" },
-        { id: 4, nombre: "Superdeportivos" },
-        { id: 5, nombre: "SUV de lujo" }
-    ];
-
-    const condicionOpciones = [
-        { id: 1, nombre: "Nuevo" },
-        { id: 2, nombre: "Usado" }
-    ];
+    const [categoriasOpciones, setCategoriasOpciones] = useState([]);
+    const [condicionOpciones, setCondicionOpciones] = useState([]);
 
     /*** Esquema de validación Yup ***/
     const objetoSchema = yup.object({
@@ -95,6 +86,35 @@ export function CreateObjeto() {
             setFileURL(URL.createObjectURL(selectedFile));
         }
     };
+
+    //Cargar categorias
+    useEffect(() => {
+        const fetchCategorias = async () => {
+            try {
+                const res = await categoriaService.getCategorias();
+                setCategoriasOpciones(res.data.data.categorias);
+            } catch (err) {
+                console.error("Error cargando categorías:", err);
+            }
+        };
+
+        fetchCategorias();
+    }, []);
+
+    //Cargar condicion
+    useEffect(() => {
+        const fetchCondiciones = async () => {
+            try {
+                const res = await condicionService.getCondiciones();
+                setCondicionOpciones(res.data.data);
+            } catch (err) {
+                console.error("Error cargando condiciones:", err);
+            }
+        };
+
+        fetchCondiciones();
+    }, []);
+
     // Cargar info del vendedor
     useEffect(() => {
         const fetchVendedor = async () => {
@@ -245,9 +265,8 @@ export function CreateObjeto() {
                                                 <SelectItem
                                                     key={condicion.id}
                                                     value={condicion.id.toString()}
-                                                    className="text-[#F5F0E8] hover:bg-[#C9A84C]/10 focus:bg-[#C9A84C]/10"
                                                 >
-                                                    {condicion.nombre}
+                                                    {condicion.descripcionCondicion}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -312,7 +331,7 @@ export function CreateObjeto() {
                                                 }}
                                                 className="w-4 h-4 accent-[#C9A84C]"
                                             />
-                                            <span className="text-[#F5F0E8] text-sm">{categoria.nombre}</span>
+                                            <span className="text-[#F5F0E8] text-sm">{categoria.nombreCategoria}</span>
                                         </label>
                                     ))}
                                 </div>

@@ -13,84 +13,63 @@ import { Card } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // icons
-import { Plus, Save, ArrowLeft } from "lucide-react";
+import { Plus, Save, ArrowLeft, Tag, AlignLeft, ToggleLeft, Eye, User, ImageIcon } from "lucide-react";
 
 // servicios
-import GenreService from "../../services/GenreService";
-import ActorService from "../../services/ActorService";
-import DirectorService from "../../services/DirectorService";
-import MovieService from "../../services/MovieService";
+import objetoService from "../../services/ObjetoService";
 import ImageService from "../../services/ImageService";
+import userService from "../../services/UserService";
 
 // componentes reutilizables
-import { CustomMultiSelect } from "../ui/custom/custom-multiple-select"; // select multi con chips
-import { ActorsForm } from "./Form/ActorsForm";
+import { CustomMultiSelect } from "../ui/custom/custom-multiple-select";
 import { CustomSelect } from "../ui/custom/custom-select";
 import { CustomInputField } from "../ui/custom/custom-input-field";
 
 export function UpdateObjeto() {
     const navigate = useNavigate();
-    const { id } = useParams(); // id de la película a actualizar
-    //URL base imagen
+    const { id } = useParams();
     const BASE_URL_image = import.meta.env.VITE_BASE_URL + "uploads";
-    //Guardar pelicula a modificar
-    //const [dataMovie, setDataMovie] = useState([]);
 
-    /*** Estados para selects y preview de imagen ***/
-    const [dataDirector, setDataDirector] = useState([]);
-    const [dataGenres, setDataGenres] = useState([]);
-    const [dataActors, setDataActors] = useState([]);
     const [file, setFile] = useState(null);
     const [fileURL, setFileURL] = useState(null);
     const [error, setError] = useState("");
+    const usuarioActual = 1;
+    const [vendedor, setVendedor] = useState({ id: 0, nombre: "" });
+    const [dataCategorias, setCategorias] = useState([]);
 
-    /*** Esquema de validación Yup ***/
-    const movieSchema = yup.object({
-        title: yup.string().required("El título es requerido").min(2, "El título debe tener al menos 2 caracteres"),
-        year: yup
-            .number()
-            .typeError("Solo acepta números")
-            .required("El año es requerido")
-            .positive("Solo acepta números positivos"),
-        time: yup.string().required("La duración es requerida"),
-        lang: yup.string().required("El idioma es requerido"),
-        director_id: yup.number().typeError("Seleccione un director").required("El director es requerido"),
-        genres: yup.array().of(yup.number()).min(1, "Seleccione al menos un género"),
-        actors: yup.array().of(
-            yup.object().shape({
-                actor_id: yup.number().typeError("Seleccione un actor").required("El actor es requerido"),
-                role: yup.string().required("El rol es requerido"),
-            })
-        ),
+    const objetoSchema = yup.object({
+        nombreObjeto: yup.string().required("El nombre del objeto es requerido").min(2, "El nombre del objeto debe tener al menos 2 caracteres"),
+        descripcionObjeto: yup.string().required("La descripcion del objeto es requerida"),
+        idCondicion: yup.number().typeError("Seleccione una condición").required("La condición es requerida"),
+        idEstadoObjeto: yup.number().typeError("Seleccione un estado").required("El estado es requerido"),
+        categorias: yup.array().of(yup.number()).min(1, "Seleccione al menos una categoría"),
     });
 
-    /*** React Hook Form ***/
-    const { control, handleSubmit, reset, formState: { errors } } = useForm({
+    const { control, handleSubmit, reset, setValue, formState: { errors } } = useForm({
         defaultValues: {
-            id: "",
-            title: "",
-            year: "",
-            time: "",
-            lang: "",
-            director_id: "",
-            genres: [],
-            actors: [{ actor_id: "", role: "" }],
+            nombreObjeto: "",
+            descripcionObjeto: "",
+            idCondicion: "",
+            idVendedor: usuarioActual,
+            idEstadoObjeto: "",
+            categorias: []
         },
-
-        resolver: yupResolver(movieSchema),
+        resolver: yupResolver(objetoSchema),
     });
 
-    const { fields, append, remove } = useFieldArray({
-        control,
-        name: "actors",
-    });
+    useEffect(() => {
+        const fetchVendedor = async () => {
+            try {
+                const res = await userService.getUserById(usuarioActual);
+                setVendedor(res.data.data);
+                setValue("idVendedor", res.data.data.id);
+            } catch (err) {
+                console.error("Error al cargar vendedor:", err);
+            }
+        };
+        fetchVendedor();
+    }, [usuarioActual, setValue]);
 
-    const addNewActor = () => append({ actor_id: "", role: "" });
-    const removeActor = (index) => {
-        if (fields.length > 1) remove(index);
-    };
-
-    /*** Manejo de imagen ***/
     const handleChangeImage = (e) => {
         const selectedFile = e.target.files?.[0];
         if (selectedFile) {
@@ -99,259 +78,293 @@ export function UpdateObjeto() {
         }
     };
 
-    /*** Cargar selects y datos de la película al montar ***/
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const directorsRes = await DirectorService.getDirectores();
-                const genresRes = await GenreService.getGenres();
-                const actorsRes = await ActorService.getActors();
-                const movieRes = await MovieService.getMovieById(id);
-                // Si la petición es exitosa, se guardan los datos
-                setDataDirector(directorsRes.data.data || []);
-                setDataGenres(genresRes.data.data || []);
-                setDataActors(actorsRes.data.data || []);
-                //Asignar al formulario la Pelicula a actualizar
-                if (movieRes.data) {
-                    const movie = movieRes.data.data
-                    console.log(movie)
+                const objetoRes = await objetoService.getObjetoById(id);
+                if (objetoRes.data) {
+                    const objeto = objetoRes.data.data;
                     reset({
-                        id: movie.id,
-                        title: movie.title,
-                        year: movie.year,
-                        time: movie.time,
-                        lang: movie.lang,
-                        director_id: movie.director_id,
-                        genres: movie.genres.map(g => g.id),
-                        actors: movie.actors.map(a => ({ actor_id: a.id, role: a.role }))
-                    })
-                    if (movie.imagen) setFileURL(BASE_URL_image + "/" + movie.imagen.image)
+                        nombreObjeto: objeto.title,
+                        descripcionObjeto: objeto.year,
+                        idCondicion: objeto.time,
+                        idEstadoObjeto: objeto.lang,
+                        idVendedor: objeto.idVendedor,
+                        categorias: objeto.categorias.map(c => c.id)
+                    });
+                    if (objeto.imagen) setFileURL(BASE_URL_image + "/" + objeto.imagen.image);
                 }
-
             } catch (err) {
-                // Si el error no es por cancelación, se registra
                 if (err.name !== "AbortError") setError(err.message);
             }
         };
-
         fetchData();
     }, [BASE_URL_image, id, reset]);
 
-
-    /*** Submit ***/
     const onSubmit = async (dataForm) => {
         try {
-            // isValid es async y recibe los datos
-            const isValid = await movieSchema.isValid(dataForm);
+            const isValid = await objetoSchema.isValid(dataForm);
             if (!isValid) return;
 
-            const response = await MovieService.updateMovie(dataForm);
-            //Imagen y notificación
+            const response = await objetoService.getUpdateObjeto(dataForm);
             if (response.data) {
                 if (file) {
-                    //archivo FormData
-                    const formData = new FormData()
-                    formData.append("file", file)
-                    formData.append("movie_id", response.data.data.id)
-                    //Guardar
-                    await ImageService.createImage(formData)
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    formData.append("objeto_id", response.data.data.id);
+                    await ImageService.createImage(formData);
                 }
-
-                //Notificar
-                toast.success(`Pelicula actualizada ${response.data.data.id} - ${response.data.data.title}`,
-                    { duration: 3000 }
-                )
-                //Redireccionar a la lista
-                navigate("/movie/table")
+                toast.success(`Objeto actualizado ${response.data.data.id} - ${response.data.data.title}`, { duration: 3000 });
+                navigate("/objeto/table");
             } else if (response.error) {
-                setError(response.error)
+                setError(response.error);
             }
-
         } catch (err) {
             console.error(err);
-            setError("Error al actualizar película");
+            setError("Error al actualizar el objeto");
         }
     };
 
-    if (error) return <p className="text-red-600">{error}</p>;
+    if (error) return (
+        <div className="min-h-screen bg-[#0A0A05] flex items-center justify-center">
+            <p className="text-red-400 text-sm tracking-widest uppercase">{error}</p>
+        </div>
+    );
+
+    /* Clases reutilizables */
+    const labelCls = "flex items-center gap-2 text-[10px] font-semibold tracking-[0.2em] uppercase text-[#C9A84C]/70 mb-1.5";
+    const inputCls = "w-full h-11 px-4 bg-[#0D0D08] border border-[#C9A84C]/20 text-[#F5F0E8] placeholder:text-[#F5F0E8]/20 rounded-none focus:outline-none focus:border-[#C9A84C]/60 transition-colors text-sm";
+    const errorCls = "text-[11px] text-red-400/80 tracking-wide mt-1";
+    const selectCls = `${inputCls} appearance-none cursor-pointer`;
 
     return (
-        <Card className="p-6 max-w-5xl mx-auto">
-            <h2 className="text-2xl font-bold mb-6">Actualizar Película</h2>
+        <div className="min-h-screen bg-[#0A0A05] flex items-center justify-center px-4 py-12">
+            <div className="w-full max-w-2xl">
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                {/* Título */}
-                <div>
-                    <Label className="block mb-1 text-sm font-medium" htmlFor="title">Título</Label>
-                    <Controller
-                        name="title"
-                        control={control}
-                        render={({ field }) => <Input {...field} id="title" placeholder="Ingrese el título" />}
-                    />
-                    {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
+                {/* Header */}
+                <div className="mb-8 border-l-2 border-[#C9A84C] pl-4">
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-[#C9A84C]/60 mb-1">Gestión de Objetos</p>
+                    <h2 className="text-2xl font-light text-[#F5F0E8] tracking-wide">Actualizar Objeto</h2>
                 </div>
 
-                {/* Año*/}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                        <Controller
-                            name="year"
-                            control={control}
-                            render={({ field }) =>
-                                <CustomInputField
-                                    {...field}
-                                    label="Año"
-                                    placeholder="2025"
-                                    error={errors.year?.message}
+                {/* Card */}
+                <div className="border border-[#C9A84C]/15 bg-[#0D0D08] p-8 space-y-7 relative">
+
+                    {/* Decorative corner */}
+                    <span className="absolute top-0 right-0 w-8 h-8 border-t border-r border-[#C9A84C]/30" />
+                    <span className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-[#C9A84C]/30" />
+
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
+
+                        {/* Grid de nombre y descripcion*/}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+                            {/* Nombre */}
+                            <div>
+                                <label className={labelCls}>
+                                    <Tag className="w-3 h-3" />
+                                    Nombre del objeto
+                                </label>
+                                <Controller
+                                    name="nombreObjeto"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <input
+                                            {...field}
+                                            id="nombreObjeto"
+                                            placeholder="Nombre del objeto"
+                                            className={inputCls}
+                                        />
+                                    )}
                                 />
-                            }
-                        />
-                    </div>
-                    {/*Duración*/}
-                    <div>
-                        <Controller
-                            name="time"
-                            control={control}
-                            render={({ field }) =>
-                                <CustomInputField
-                                    {...field}
-                                    label="Duración (min)"
-                                    placeholder="160"
-                                    error={errors.time?.message} />
-                            }
-                        />
-                    </div>
-                    {/*Idioma*/}
-                    <div>
-                        <Controller
-                            name="lang"
-                            control={control}
-                            render={({ field }) =>
-                                <CustomInputField
-                                    {...field}
-                                    label="Idioma"
-                                    placeholder="Español"
-                                    error={errors.lang?.message} />}
-                        />
-                    </div>
-                </div>
-
-                {/* Director */}
-                <div>
-                    <Label className="block mb-1 text-sm font-medium">Director</Label>
-
-                    <Controller
-                        name="director_id"
-                        control={control}
-                        render={({ field }) =>
-                            <CustomSelect
-                                field={field}
-                                data={dataDirector}
-                                label="Director"
-                                getOptionLabel={(director) => `${director.fname} ${director.lname}`}
-                                getOptionValue={(director) => director.id}
-                                error={errors.director_id?.message}
-                            />
-                        }
-                    />
-
-                </div>
-                {/* Géneros */}
-                <div>
-
-                    <Controller
-                        name="genres"
-                        control={control}
-                        render={({ field }) =>
-                            <CustomMultiSelect field={field} data={dataGenres}
-                                label="Géneros"
-                                getOptionLabel={(item) => item.title}
-                                getOptionValue={(item) => item.id}
-                                placeholder="Seleccione géneros"
-                                error={errors.genres?.message} />}
-                    />
-                </div>
-                {/* Actores */}
-                <div>
-                    <div className="flex items-center justify-between">
-                        <Label className="block mb-1 text-sm font-medium">Actores</Label>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button type="button" size="icon" className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={addNewActor}>
-                                        <Plus className="h-4 w-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Agregar actor</TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
-
-                    <div className="space-y-4 mt-3">
-                        {fields.map((field, index) => (
-                            <ActorsForm
-                                key={field.id}
-                                index={index}
-                                control={control}
-                                data={dataActors}
-                                onRemove={removeActor}
-                                disableRemoveButton={fields.length === 1}
-                                errors={errors}
-                            />
-                        ))}
-                    </div>
-                </div>
-                {/* Imagen */}
-                <div className="mb-6">
-                    <Label htmlFor="image" className="block mb-1 text-sm font-medium">
-                        Imagen
-                    </Label>
-
-                    <div
-                        className="relative w-56 h-56 border-2 border-dashed border-muted/50 rounded-lg flex items-center justify-center cursor-pointer overflow-hidden hover:border-primary transition-colors"
-                        onClick={() => document.getElementById("image").click()}
-                    >
-                        {!fileURL && (
-                            <div className="text-center px-4">
-                                <p className="text-sm text-muted-foreground">Haz clic o arrastra una imagen</p>
-                                <p className="text-xs text-muted-foreground">(jpg, png, máximo 5MB)</p>
+                                {errors.nombreObjeto && <p className={errorCls}>{errors.nombreObjeto.message}</p>}
                             </div>
-                        )}
-                        {fileURL && (
-                            <img
-                                src={fileURL}
-                                alt="preview"
-                                className="w-full h-full object-contain rounded-lg shadow-sm"
+
+                            {/* Descripción */}
+                            <div>
+                                <label className={labelCls}>
+                                    <AlignLeft className="w-3 h-3" />
+                                    Descripción
+                                </label>
+                                <Controller
+                                    name="descripcionObjeto"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <input
+                                            {...field}
+                                            id="descripcionObjeto"
+                                            placeholder="Descripción del objeto"
+                                            className={inputCls}
+                                        />
+                                    )}
+                                />
+                                {errors.descripcionObjeto && <p className={errorCls}>{errors.descripcionObjeto.message}</p>}
+                            </div>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="border-t border-[#C9A84C]/10" />
+
+                        {/* Grid de condicion y estado*/}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+                            {/* Condición */}
+                            <div>
+                                <label className={labelCls}>
+                                    <ToggleLeft className="w-3 h-3" />
+                                    Condición
+                                </label>
+                                <Controller
+                                    name="idCondicion"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <select {...field} className={selectCls}>
+                                            <option value="" disabled>Seleccionar…</option>
+                                            <option value={1}>Nuevo</option>
+                                            <option value={2}>Usado</option>
+                                        </select>
+                                    )}
+                                />
+                                {errors.idCondicion && <p className={errorCls}>{errors.idCondicion.message}</p>}
+                            </div>
+
+                            {/* Estado */}
+                            <div>
+                                <label className={labelCls}>
+                                    <Eye className="w-3 h-3" />
+                                    Estado
+                                </label>
+                                <Controller
+                                    name="idEstadoObjeto"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <select {...field} className={selectCls}>
+                                            <option value="" disabled>Seleccionar…</option>
+                                            <option value={1}>Disponible</option>
+                                            <option value={2}>En subasta</option>
+                                            <option value={3}>Vendido</option>
+                                        </select>
+                                    )}
+                                />
+                                {errors.idEstadoObjeto && <p className={errorCls}>{errors.idEstadoObjeto.message}</p>}
+                            </div>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="border-t border-[#C9A84C]/10" />
+
+                        {/* Dueño */}
+                        <div>
+                            <label className={labelCls}>
+                                <User className="w-3 h-3" />
+                                Dueño
+                            </label>
+                            <Controller
+                                name="duenno"
+                                control={control}
+                                render={() => (
+                                    <input
+                                        readOnly
+                                        value={vendedor?.nombreUsuario || ""}
+                                        className={`${inputCls} cursor-not-allowed opacity-50`}
+                                    />
+                                )}
                             />
-                        )}
-                    </div>
+                            <Controller
+                                name="idVendedor"
+                                control={control}
+                                render={({ field }) => <input type="hidden" {...field} />}
+                            />
+                        </div>
 
-                    <input
-                        type="file"
-                        id="image"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleChangeImage}
-                    />
-                </div>
+                        {/* Categorías */}
+                        <div>
+                            <Controller
+                                name="categorias"
+                                control={control}
+                                render={({ field }) => (
+                                    <CustomMultiSelect
+                                        field={field}
+                                        data={dataCategorias}
+                                        label="Categorías"
+                                        getOptionLabel={(item) => item.nombreCategoria}
+                                        getOptionValue={(item) => item.id}
+                                        placeholder="Seleccione categorías"
+                                        error={errors.categorias?.message}
+                                    />
+                                )}
+                            />
+                        </div>
 
-                <div className="flex justify-between gap-4 mt-6">
-                    <Button
-                        type="button"
-                        variant="default" // sólido
-                        className="flex items-center gap-2 bg-accent text-white"
-                        onClick={() => navigate(-1)}
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Regresar
-                    </Button>
-                    {/* Botón Guardar */}
-                    <Button type="submit" className="flex-1">
-                        <Save className="w-4 h-4" />
-                        Guardar
-                    </Button>
+                        {/* Divider */}
+                        <div className="border-t border-[#C9A84C]/10" />
+
+                        {/* Imagen */}
+                        <div>
+                            <label className={labelCls}>
+                                <ImageIcon className="w-3 h-3" />
+                                Imagen
+                            </label>
+
+                            <div
+                                onClick={() => document.getElementById("image").click()}
+                                className="group relative w-48 h-48 border border-dashed border-[#C9A84C]/25 flex items-center justify-center cursor-pointer overflow-hidden hover:border-[#C9A84C]/60 transition-all duration-300"
+                            >
+                                {!fileURL ? (
+                                    <div className="text-center px-4">
+                                        <ImageIcon className="w-6 h-6 text-[#C9A84C]/30 mx-auto mb-2" />
+                                        <p className="text-[11px] text-[#F5F0E8]/30 tracking-widest uppercase">Seleccionar</p>
+                                        <p className="text-[10px] text-[#F5F0E8]/20 mt-0.5">jpg · png · máx 5MB</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <img
+                                            src={fileURL}
+                                            alt="preview"
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <p className="text-[10px] tracking-widest uppercase text-[#C9A84C]">Cambiar</p>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            <input
+                                type="file"
+                                id="image"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleChangeImage}
+                            />
+                        </div>
+
+                        {/* Divider */}
+                        <div className="border-t border-[#C9A84C]/10" />
+
+                        {/* Botones */}
+                        <div className="flex items-center justify-between gap-4 pt-1">
+                            <button
+                                type="button"
+                                onClick={() => navigate(-1)}
+                                className="flex items-center gap-2 px-5 py-2.5 border border-[#C9A84C]/25 text-[#C9A84C]/70 text-[11px] tracking-[0.2em] uppercase hover:border-[#C9A84C]/60 hover:text-[#C9A84C] transition-all duration-200"
+                            >
+                                <ArrowLeft className="w-3.5 h-3.5" />
+                                Regresar
+                            </button>
+
+                            <button
+                                type="submit"
+                                className="flex items-center gap-2 px-8 py-2.5 bg-[#C9A84C] text-[#0A0A05] text-[11px] font-semibold tracking-[0.2em] uppercase hover:bg-[#D4B565] transition-all duration-200 active:scale-[0.98]"
+                            >
+                                <Save className="w-3.5 h-3.5" />
+                                Guardar cambios
+                            </button>
+                        </div>
+
+                    </form>
                 </div>
-            </form>
-        </Card>
+            </div>
+        </div>
     );
 }

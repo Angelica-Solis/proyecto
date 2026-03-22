@@ -211,7 +211,7 @@ useEffect(() => {
                                                     <Button
                                                         size="icon"
                                                         variant="ghost"
-                                                        onClick={() => navigate(`/objeto/editar/${objetoo.id}`)}
+                                                        onClick={() => navigate(`/objeto/update/${objetoo.id}`)}
                                                         className="w-8 h-8 p-0 rounded-none border border-[#4A9EFF]/20 text-[#4A9EFF]/70 hover:border-[#4A9EFF] hover:text-[#4A9EFF] hover:bg-[#4A9EFF]/[0.1] transition-all duration-300"
                                                     >
                                                         <Edit className="h-4 w-4" />
