@@ -3,7 +3,7 @@ import { useForm, Controller, useFieldArray } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate, useParams } from "react-router-dom";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 // shadcn/ui
 import { Button } from "@/components/ui/button";
@@ -133,28 +133,37 @@ export function UpdateObjeto() {
             const dataToSend = {
                 ...dataForm,
                 id: parseInt(id),
-                imagenPrincipal: file ? true : false, // indica si hay nueva imagen
-                nombreImagen: file ? file.name : null //nombre de la nueva imagen
             };
 
+            if (file) {
+                dataToSend.imagenPrincipal = true;
+                dataToSend.nombreImagen = file.name;
+            }
             console.log("DATA A ENVIAR:", dataToSend);
 
             const response = await objetoService.getUpdateObjeto(dataToSend);
 
             if (response.data) {
                 if (file) {
-                    const formData = new FormData();
-                    formData.append("file", file);
-                    formData.append("objeto_id", response.data.data.id);
+                    try {
+                        const formData = new FormData();
+                        formData.append("file", file);
+                        formData.append("objeto_id", response.data.data.id);
 
-                    await ImageService.createImage(formData);
+                        await ImageService.updateImage(formData);
+                    } catch (err) {
+                        console.error("Error subiendo la imagen:", err);
+                        toast.error("Objeto actualizado, pero la imagen no se pudo subir");
+                    }
                 }
 
-                toast.success(`Objeto actualizado ${response.data.data.id}`, {
-                    duration: 3000
+                toast.success("Objeto actualizado correctamente", {
+                    duration: 2000
                 });
 
-                navigate("/objeto/listado");
+                setTimeout(() => {
+                    navigate("/objeto/listado");
+                }, 2000);
             }
 
         } catch (err) {
