@@ -179,6 +179,7 @@ export function CreateObjeto() {
                 await ImageService.createImage(formData);
 
                 toast.success(`Objeto creado exitosamente: ${response.data.data.nombreObjeto}`);
+                await new Promise((resolve) => setTimeout(resolve, 1000));
                 navigate("/objeto/listado");
             }
         } catch (err) {
@@ -411,7 +412,6 @@ export function CreateObjeto() {
                                 className="hidden"
                                 accept="image/*"
                                 onChange={handleChangeImage}
-                                {...control.register?.("imagen")} //registra el campoo
                             />
                         </div>
                     </div>
@@ -427,11 +427,9 @@ export function CreateObjeto() {
                             Regresar
                         </Button>
 
-                        <Button asChild className="flex items-center gap-2 border border-[#C9A84C] bg-[#C9A84C] text-[#080807] hover:bg-[#C9A84C]/90 transition-all duration-300 text-[9px] tracking-[0.3em] uppercase font-medium px-8 h-10">
-                            <button type="submit">
-                                <Save className="w-4 h-4" />
-                                Guardar Cambios
-                            </button>
+                        <Button type="submit" className="flex items-center gap-2 border border-[#C9A84C] bg-[#C9A84C] text-[#080807] hover:bg-[#C9A84C]/90 transition-all duration-300 text-[9px] tracking-[0.3em] uppercase font-medium px-8 h-10">
+                            <Save className="w-4 h-4" />
+                            Guardar Cambios
                         </Button>
                     </div>
                 </form>
