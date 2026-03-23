@@ -33,8 +33,6 @@ export function CreateObjeto() {
     const navigate = useNavigate();
 
     /*** Estados para preview de imágenes ***/
-    const [files, setFiles] = useState([]);
-    const [fileURLs, setFileURLs] = useState([]);
     const [error, setError] = useState("");
     const [fileURL, setFileURL] = useState(null);
     const usuarioActual = 1; //idvendedor 
@@ -375,46 +373,45 @@ export function CreateObjeto() {
                     </div>
 
                     {/* Imágenes */}
-                    <div>
-                        <Label className="block mb-2 text-[#C9A84C] text-[11px] font-medium tracking-[0.2em] uppercase">
-                            <span className="text-[#F5F0E8]">📷</span> Imágenes
-                        </Label>
+                    <Controller
+                        name="imagen"
+                        control={control}
+                        render={({ field }) => (
+                            <>
+                                <div
+                                    className="relative w-56 h-56 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer overflow-hidden hover:border-[#C9A84C] transition-colors"
+                                    onClick={() => document.getElementById("image").click()}
+                                >
+                                    {!fileURL ? (
+                                        <div className="text-center px-4">
+                                            <p className="text-sm text-muted-foreground">Haz clic o arrastra una imagen</p>
+                                            <p className="text-xs text-muted-foreground">(jpg, png, máximo 5MB)</p>
+                                        </div>
+                                    ) : (
+                                        <img
+                                            src={fileURL}
+                                            alt="preview"
+                                            className="w-full h-full object-contain rounded-lg shadow-sm"
+                                        />
+                                    )}
+                                </div>
 
-                        {/* Imagen */}
-                        <div className="mb-6">
-                            <Label htmlFor="image" className="block mb-1 text-sm font-medium">
-                                Imagen
-                            </Label>
-
-                            <div
-                                className="relative w-56 h-56 border-2 border-dashed border-muted/50 rounded-lg flex items-center justify-center cursor-pointer overflow-hidden hover:border-primary transition-colors"
-                                onClick={() => document.getElementById("image").click()}
-                            >
-                                {!fileURL && (
-                                    <div className="text-center px-4">
-                                        <p className="text-sm text-muted-foreground">Haz clic o arrastra una imagen</p>
-                                        <p className="text-xs text-muted-foreground">(jpg, png, máximo 5MB)</p>
-                                    </div>
-                                )}
-                                {fileURL && (
-                                    <img
-                                        src={fileURL}
-                                        alt="preview"
-                                        className="w-full h-full object-contain rounded-lg shadow-sm"
-                                    />
-                                )}
-                            </div>
-
-                            <input
-                                type="file"
-                                id="image"
-                                className="hidden"
-                                accept="image/*"
-                                onChange={handleChangeImage}
-                                {...control.register?.("imagen")} //registra el campoo
-                            />
-                        </div>
-                    </div>
+                                <input
+                                    id="image"
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const selectedFile = e.target.files?.[0];
+                                        if (selectedFile) {
+                                            setFileURL(URL.createObjectURL(selectedFile)); // previsualización
+                                            field.onChange(selectedFile); // actualiza RHF
+                                        }
+                                    }}
+                                />
+                            </>
+                        )}
+                    />
 
                     {/* Botones */}
                     <div className="flex justify-between gap-4 pt-6 border-t border-[#C9A84C]/20">

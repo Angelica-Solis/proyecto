@@ -132,7 +132,9 @@ export function UpdateObjeto() {
         try {
             const dataToSend = {
                 ...dataForm,
-                id: parseInt(id)
+                id: parseInt(id),
+                imagenPrincipal: file ? true : false, // indica si hay nueva imagen
+                nombreImagen: file ? file.name : null //nombre de la nueva imagen
             };
 
             console.log("DATA A ENVIAR:", dataToSend);
@@ -152,7 +154,7 @@ export function UpdateObjeto() {
                     duration: 3000
                 });
 
-                navigate("/objeto/table");
+                navigate("/objeto/listado");
             }
 
         } catch (err) {
