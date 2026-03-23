@@ -47,7 +47,7 @@ export function CreateObjeto() {
             .min(2, 'El nombre debe tener al menos 2 caracteres'),
         descripcionObjeto: yup.string()
             .required('La descripción del objeto es requerida')
-            .min(10, 'La descripción debe tener al menos 10 caracteres'),
+            .min(20, 'La descripción debe tener al menos 20 caracteres'),
         idCondicion: yup
             .number()
             .typeError('Seleccione una condición')
@@ -145,7 +145,7 @@ export function CreateObjeto() {
             try {
                 const res = await userService.getUserById(usuarioActual);
                 setVendedor(res.data.data);
-                setValue("idVendedor", res.data.data.id); // Esto se envía al backend
+                setValue("idVendedor", parseInt(res.data.data.id)); // Esto se envía al backend
             } catch (err) {
                 console.error("Error al cargar vendedor:", err);
             }
@@ -158,13 +158,16 @@ export function CreateObjeto() {
         console.log("onSubmit disparado", dataForm);
 
         if (!dataForm.imagen) {
-            toast.error("Debes seleccionar al menos una imagen");
+            toast.error("Debes seleccionar una imagen");
             return;
         }
 
         try {
-            // Crear objeto sin el campo 'imagen'
-            const { imagen, ...objetoData } = dataForm;
+            const { imagen, duenno, ...objetoData } = dataForm;
+
+            // asegurar tipos correctos
+            objetoData.idVendedor = parseInt(objetoData.idVendedor);
+
             const response = await objetoService.createObjeto(objetoData);
 
             if (response.data) {
@@ -173,15 +176,17 @@ export function CreateObjeto() {
                 const formData = new FormData();
                 formData.append("file", imagen);
                 formData.append("objeto_id", objetoId);
+///////////////////////////
+                const resImg = await ImageService.createImage(formData);
+                console.log("RESPUESTA IMAGEN:", resImg);
 
-                await ImageService.createImage(formData);
-
-                toast.success(`Objeto creado exitosamente: ${response.data.data.nombreObjeto}`);
-                await new Promise((resolve) => setTimeout(resolve, 1000));
+                toast.success("Objeto creado correctamente");
                 navigate("/objeto/listado");
             }
+
         } catch (err) {
-            console.error(err);
+            console.error("ERROR BACKEND:", err.response?.data || err);
+            console.error("ERROR IMAGEN:", err.response?.data || err);
             toast.error("Error al crear el objeto");
         }
     };
