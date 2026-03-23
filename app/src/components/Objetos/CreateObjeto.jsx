@@ -63,7 +63,9 @@ export function CreateObjeto() {
 
         imagen: yup
             .mixed()
+            .nullable()
             .required("Debes subir una imagen")
+
     });
 
     /*** React Hook Form ***/
@@ -76,10 +78,11 @@ export function CreateObjeto() {
         defaultValues: {
             nombreObjeto: "",
             descripcionObjeto: "",
-            idVendedor: usuarioActual,
+            duenno: usuarioActual,
             idCondicion: 0,
             idEstadoObjeto: 1, // Disponible por defecto
-            categorias: []
+            categorias: [],
+            imagen: null
         },
         resolver: yupResolver(objetoSchema)
     });
@@ -88,6 +91,7 @@ export function CreateObjeto() {
         if (selectedFile) {
             setFiles([selectedFile]);
             setFileURL(URL.createObjectURL(selectedFile));
+            setValue("imagen", selectedFile);
         }
     };
 
@@ -153,47 +157,32 @@ export function CreateObjeto() {
 
     /*** Submit ***/
     const onSubmit = async (dataForm) => {
-        if (files.length === 0) {
-            toast.error("Debes seleccionar al menos una imagen para el objeto");
+        console.log("onSubmit disparado", dataForm);
+
+        if (!dataForm.imagen) {
+            toast.error("Debes seleccionar al menos una imagen");
             return;
         }
 
         try {
-            console.log("Datos del formulario:", dataForm);
-
-            // Crear objeto en el API
-            const response = await objetoService.createObjeto(dataForm);
+            // Crear objeto sin el campo 'imagen'
+            const { imagen, ...objetoData } = dataForm;
+            const response = await objetoService.createObjeto(objetoData);
 
             if (response.data) {
-                // Subir imágenes
                 const objetoId = response.data.data.id;
 
-                for (const file of files) {
-                    const formData = new FormData();
-                    formData.append("file", file);
-                    formData.append("objeto_id", objetoId);
+                const formData = new FormData();
+                formData.append("file", imagen);
+                formData.append("objeto_id", objetoId);
 
-                    console.log("Enviando imagen:", file);
+                await ImageService.createImage(formData);
 
-                    const res = await ImageService.createImage(formData);
-                    console.log("Respuesta imagen:", res.data);
-                }
-
-                // Notificar
-                toast.success(
-                    `Objeto creado exitosamente: ${response.data.data.nombreObjeto}`,
-                    { duration: 3000 }
-                );
-
-                // Redireccionar a la lista
-                navigate("/objeto/table");
-            } else if (response.error) {
-                setError(response.error);
-                toast.error(response.error);
+                toast.success(`Objeto creado exitosamente: ${response.data.data.nombreObjeto}`);
+                navigate("/objeto/listado");
             }
         } catch (err) {
             console.error(err);
-            setError("Error al crear objeto");
             toast.error("Error al crear el objeto");
         }
     };
@@ -422,6 +411,7 @@ export function CreateObjeto() {
                                 className="hidden"
                                 accept="image/*"
                                 onChange={handleChangeImage}
+                                {...control.register?.("imagen")} //registra el campoo
                             />
                         </div>
                     </div>
