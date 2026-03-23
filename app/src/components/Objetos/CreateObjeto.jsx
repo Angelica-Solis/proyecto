@@ -52,7 +52,9 @@ export function CreateObjeto() {
             .min(10, 'La descripción debe tener al menos 10 caracteres'),
         idCondicion: yup
             .number()
-            .typeError('Seleccione una condición')
+            .nullable()
+            .transform((value) => (isNaN(value) ? null : value))
+            .min(1, 'Seleccione una condición')
             .required('La condición es requerida'),
         idEstadoObjeto: yup
             .number()
@@ -79,7 +81,7 @@ export function CreateObjeto() {
             nombreObjeto: "",
             descripcionObjeto: "",
             duenno: usuarioActual,
-            idCondicion: 0,
+            idCondicion: null,
             idEstadoObjeto: 1, // Disponible por defecto
             categorias: [],
             imagen: null
@@ -178,8 +180,7 @@ export function CreateObjeto() {
 
                 await ImageService.createImage(formData);
 
-                toast.success(`Objeto creado exitosamente: ${response.data.data.nombreObjeto}`);
-                await new Promise((resolve) => setTimeout(resolve, 1000));
+                toast.success(`Objeto creado exitosamente`);
                 navigate("/objeto/listado");
             }
         } catch (err) {
@@ -264,6 +265,7 @@ export function CreateObjeto() {
                             <Controller
                                 name="idCondicion"
                                 control={control}
+                                defaultValue={null}
                                 render={({ field }) => (
                                     <Select
                                         onValueChange={(value) => field.onChange(parseInt(value))}
