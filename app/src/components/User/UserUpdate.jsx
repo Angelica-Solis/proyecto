@@ -58,7 +58,7 @@ export function UpdateUser() {
         };
         fetchData();
     }, [id, reset]);
-
+    // envio de formulario
     const onSubmit = async (dataForm) => {
         try {
             dataForm.id = id;
@@ -109,7 +109,7 @@ export function UpdateUser() {
             />
             {errors[name] && (
                 <p className="text-xs text-red-400/80 tracking-wide mt-0.5">
-                    ⚠ {errors[name].message}
+                    {errors[name].message}
                 </p>
             )}
         </div>
@@ -117,7 +117,7 @@ export function UpdateUser() {
 
     if (error) return (
         <div className="flex items-center justify-center h-40">
-            <p className="text-red-400 border border-red-500/30 px-4 py-2 text-sm tracking-wide">⚠ {error}</p>
+            <p className="text-red-400 border border-red-500/30 px-4 py-2 text-sm tracking-wide">{error}</p>
         </div>
     );
 

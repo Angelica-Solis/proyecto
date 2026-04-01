@@ -84,14 +84,14 @@ export function CreateObjeto() {
         },
         resolver: yupResolver(objetoSchema)
     });
-    const handleChangeImage = (e) => {
-        const selectedFile = e.target.files?.[0];
-        if (selectedFile) {
-            setFiles([selectedFile]);
-            setFileURL(URL.createObjectURL(selectedFile));
-            setValue("imagen", selectedFile);
-        }
-    };
+    // const handleChangeImage = (e) => {
+    //     const selectedFile = e.target.files?.[0];
+    //     if (selectedFile) {
+    //         setFiles([selectedFile]);
+    //         setFileURL(URL.createObjectURL(selectedFile));
+    //         setValue("imagen", selectedFile);
+    //     }
+    // };
 
     //Cargar categorias
     useEffect(() => {

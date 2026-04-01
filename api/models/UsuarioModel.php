@@ -24,10 +24,10 @@ class UsuarioModel
     {
         // Traemos solo datos públicos por seguridad
         $vSql = "SELECT u.id, u.nombreUsuario, u.emailUsuario, u.IdRol, u.IdEstado, u.fecha_registro, r.nombreRol, e.descripcionEstado
-         FROM usuario u 
-         INNER JOIN rol r ON r.id = u.IdRol
-         INNER JOIN estado_usuario e ON e.id = u.IdEstado
-         WHERE u.id=$id;";
+            FROM usuario u 
+            INNER JOIN rol r ON r.id = u.IdRol
+            INNER JOIN estado_usuario e ON e.id = u.IdEstado
+            WHERE u.id=$id;";
         $vResultado = $this->enlace->executeSQL($vSql);
 
         return (!empty($vResultado)) ? $vResultado[0] : null;

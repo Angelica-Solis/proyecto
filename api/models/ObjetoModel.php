@@ -296,10 +296,9 @@ class ObjetoModel
         idEstadoObjeto ='$objeto->idEstadoObjeto',
         idVendedor=$objeto->idVendedor
         WHERE id=$objeto->id";
-        //Ejecutar la consulta
+        
         $cResults = $this->enlace->executeSQL_DML($sql);
         //categorias
-        //Eliminar categorias asociados a la pelicula
         $sql = "Delete from objeto_categoria where idObjeto=$objeto->id";
         $vResultadoD = $this->enlace->executeSQL_DML($sql);
         //Insertar categorias
