@@ -33,4 +33,42 @@ class PujaModel
 
         return (!empty($vResultado) && is_array($vResultado)) ? $vResultado : [];
     }
+
+
+    //Crear puja
+    public function create($data)
+    {
+        // Usuario simulado
+        $idUsuario = 3;
+
+        $subastaM = new SubastaModel;
+        $subasta = $subastaM->get($data->idSubasta);
+
+        if ($subasta->idEstadoSubasta != 1) {
+            throw new Exception("La subasta no está activa");
+        }
+
+        if ($subasta->idVendedor == $idUsuario) {
+            throw new Exception("No puedes pujar en tu propia subasta");
+        }
+
+        $pujaActual = (!empty($subasta->historialPujas))
+            ? $subasta->historialPujas[0]->monto
+            : $subasta->precioBase;
+
+        if ($data->monto <= $pujaActual) {
+            throw new Exception("El monto debe ser mayor a la puja actual");
+        }
+
+        if (($data->monto - $pujaActual) < $subasta->incrementoMinimo) {
+            throw new Exception("No cumple el incremento mínimo");
+        }
+
+        $sql = "INSERT INTO puja (idSubasta, idUsuario, monto, fechaHora)
+            VALUES ($data->idSubasta, $idUsuario, $data->monto, NOW())";
+
+        $this->enlace->executeSQL_DML($sql);
+
+        return true;
+    }
 }

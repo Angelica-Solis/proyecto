@@ -284,10 +284,35 @@ class ObjetoModel
         }
         return null;
     }
-    //Update
 
+
+    //Consultas antes de hacer update a la suabasta para validar
+    public function consultaEstadoObjeto($idObjeto)
+    {
+        $sql = "SELECT idEstadoObjeto from objeto
+        WHERE id = $idObjeto AND (idEstadoObjeto = 2 OR idEstadoObjeto = 3);";
+        $result = $this->enlace->executeSQL($sql);
+        return $result;
+    }
+    public function consultaSiEstaEnSubastaActiva($idObjeto)
+    {
+        $sql = "SELECT idEstadoSubasta FROM subasta
+        WHERE idObjeto = $idObjeto AND idEstadoSubasta = 1;";
+        $result = $this->enlace->executeSQL($sql);
+        return $result;
+    }
+    //Update
     public function update($objeto)
     {
+        $consultaEstObjeto = $this->consultaEstadoObjeto($objeto->id);
+        $consultaEstSubasta = $this->consultaSiEstaEnSubastaActiva($objeto->id);
+
+        if (!empty($consultaEstObjeto)) {
+            throw new Exception("No se puede editar un objeto en subasta o vendido");
+        }
+        if (!empty($consultaEstSubasta)) {
+            throw new Exception("No se puede editar un objeto en subasta activa");
+        }
         //Consulta sql
         $sql = "UPDATE objeto SET  
         nombreObjeto ='$objeto->nombreObjeto',
@@ -296,7 +321,7 @@ class ObjetoModel
         idEstadoObjeto ='$objeto->idEstadoObjeto',
         idVendedor=$objeto->idVendedor
         WHERE id=$objeto->id";
-        
+
         $cResults = $this->enlace->executeSQL_DML($sql);
         //categorias
         $sql = "Delete from objeto_categoria where idObjeto=$objeto->id";

@@ -167,8 +167,8 @@ useEffect(() => {
 
                                     <TableCell className="py-3">
                                         <img
-                                            src={`http://127.0.0.1:81/proyecto/api/uploads/${objetoo.imagenPrincipal}`}
-                                            alt={objetoo.nombreObjeto}
+                                            src={`http://127.0.0.1:81/proyecto/api/uploads/${objetoo.imagen}`}
+                                            alt={objetoo.imagen}
                                             className="w-16 h-16 object-cover border border-[#C9A84C]/25"
                                         />
                                     </TableCell>

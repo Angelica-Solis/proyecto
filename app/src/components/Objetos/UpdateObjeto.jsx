@@ -143,6 +143,7 @@ export function UpdateObjeto() {
 
             const response = await objetoService.getUpdateObjeto(dataToSend);
 
+
             if (response.data) {
                 if (file) {
                     try {
@@ -168,16 +169,17 @@ export function UpdateObjeto() {
 
         } catch (err) {
             console.error(err);
-            setError("Error al actualizar el objeto");
-            toast.error("Error al actualizar el objeto");
+
+            const mensaje = err.response?.data?.message || "Error al actualizar el objeto";
+
+            setError(mensaje);
+            toast.error(mensaje);
+            setTimeout(() => {
+                navigate("/objeto/listado");
+            }, 1500);
         }
     };
 
-    if (error) return (
-        <div className="min-h-screen bg-[#0A0A05] flex items-center justify-center">
-            <p className="text-red-400 text-sm tracking-widest uppercase">{error}</p>
-        </div>
-    );
 
     /* Clases reutilizables */
     const labelCls = "flex items-center gap-2 text-[10px] font-semibold tracking-[0.2em] uppercase text-[#C9A84C]/70 mb-1.5";
@@ -286,7 +288,7 @@ export function UpdateObjeto() {
                                     name="idEstadoObjeto"
                                     control={control}
                                     render={({ field }) => (
-                                        <select {...field} className={selectCls}>
+                                        <select {...field} className={selectCls} disabled>
                                             <option value="" disabled>Seleccionar…</option>
                                             <option value={1}>Disponible</option>
                                             <option value={2}>En subasta</option>

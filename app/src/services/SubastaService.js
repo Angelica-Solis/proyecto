@@ -11,7 +11,7 @@ class SubastaService {
     }
 
     getDetalle(id) {
-    return axios.get(BASE_URL + '/' + id);
+    return axios.get(BASE_URL + '/get/' + id);
     }
 
     // Traer todas para la tabla de mantenimiento
