@@ -36,13 +36,16 @@ class PujaModel
 
 
     //Crear puja
-    public function create($data)
+    public function create($data, $usuarioActual)
     {
-        // Usuario simulado
-        $idUsuario = 3;
+        $idUsuario = $usuarioActual; // usar usuario del header
 
-        $subastaM = new SubastaModel;
+        $subastaM = new SubastaModel();
         $subasta = $subastaM->get($data->idSubasta);
+
+        if (!$subasta) {
+            throw new Exception("La subasta no existe");
+        }
 
         if ($subasta->idEstadoSubasta != 1) {
             throw new Exception("La subasta no está activa");
@@ -65,10 +68,14 @@ class PujaModel
         }
 
         $sql = "INSERT INTO puja (idSubasta, idUsuario, monto, fechaHora)
-            VALUES ($data->idSubasta, $idUsuario, $data->monto, NOW())";
+        VALUES ($data->idSubasta, $idUsuario, $data->monto, NOW())";
 
         $this->enlace->executeSQL_DML($sql);
 
-        return true;
+        return [
+            "idSubasta" => $data->idSubasta,
+            "monto" => $data->monto,
+            "idUsuario" => $idUsuario
+        ];
     }
 }

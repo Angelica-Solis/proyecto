@@ -1,4 +1,8 @@
 <?php
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Pusher\Pusher;
+
 class subasta
 {
     public function get($id)
@@ -130,19 +134,54 @@ class subasta
             handleException($e);
         }
     }
+    //Pusher 
+    private function getPusher()
+    {
+        $options = [
+            'cluster' => PUSHER_CLUSTER,
+            'useTLS' => true
+        ];
+
+        return new Pusher(
+            PUSHER_KEY,
+            PUSHER_SECRET,
+            PUSHER_APP_ID,
+            $options
+        );
+    }
     // Crear puja
     public function createPuja()
     {
         try {
             $request = new Request();
             $response = new Response();
-            //Obtener json enviado
             $inputJSON = $request->getJSON();
-            //Instancia del modelo
-            $objeto = new PujaModel();
-            //Acción del modelo a ejecutar
-            $result = $objeto->create($inputJSON);
-            //Dar respuesta
+
+            // Leer usuario desde header, default 1
+            $usuarioActual = $_SERVER['HTTP_X_USUARIO_ID'] ?? 1;
+
+            $subastaM = new SubastaModel();
+
+            // obtener líder anterior
+            $subastaAntes = $subastaM->get($inputJSON->idSubasta);
+            $liderAnterior = (!empty($subastaAntes->historialPujas))
+                ? $subastaAntes->historialPujas[0]->idUsuario
+                : null;
+
+            $pujaModel = new PujaModel();
+            $result = $pujaModel->create($inputJSON, $usuarioActual); // pasar usuarioActual
+
+            // Pusher
+            $pusher = $this->getPusher();
+            $data = [
+                "idSubasta" => $inputJSON->idSubasta,
+                "monto" => $result["monto"],
+                "idUsuario" => $result["idUsuario"],
+                "liderAnterior" => $liderAnterior,
+                "usuarioActual" => $usuarioActual
+            ];
+            $pusher->trigger("subasta", "nueva-puja", $data);
+
             $response->toJSON($result);
         } catch (Exception $e) {
             handleException($e);

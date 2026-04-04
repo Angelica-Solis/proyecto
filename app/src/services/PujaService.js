@@ -9,10 +9,13 @@ class PujaService {
         return axios.get(`${BASE_URL}/historial/${idSubasta}`);
     }
 
-    createPuja(data) {
-        return axios.post(BASE_PUJA, data);
+    createPuja(data, usuarioId) {
+        return axios.post(BASE_PUJA, data, {
+            headers: {
+                "X-Usuario-Id": usuarioId, //ID del usuario actual
+            }
+        });
     }
-
 }
 
 export default new PujaService();

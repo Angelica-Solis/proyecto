@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Crown, Clock, TrendingUp, User, Gavel, ChevronLeft, ChevronRight, History } from "lucide-react";
 import subastaService from "@/services/SubastaService";
 import pujaService from "@/services/PujaService";
+import { toast } from "sonner";
+import Pusher from "pusher-js";
 
 const fmt = (n) =>
     new Intl.NumberFormat("es-CR", { style: "currency", currency: "CRC", maximumFractionDigits: 0 }).format(n);
@@ -80,6 +82,7 @@ export function SubastaEnCurso() {
     const [loading, setLoading] = useState(true);
     const [monto, setMonto] = useState("");
     const [loadingPuja, setLoadingPuja] = useState(false);
+    const [usuarioActual, setUsuarioActual] = useState(5);
 
     useEffect(() => {
         const cargar = async () => {
@@ -95,28 +98,67 @@ export function SubastaEnCurso() {
         cargar();
     }, [id]);
 
+    //PUSHER
+    useEffect(() => {
+        const pusher = new Pusher(import.meta.env.VITE_PUSHER_KEY, {
+            cluster: import.meta.env.VITE_PUSHER_CLUSTER,
+        });
+
+        const channel = pusher.subscribe("subasta");
+
+        channel.bind("nueva-puja", async (data) => {
+            try {
+                const { liderAnterior, idUsuario: nuevoLider } = data;
+
+                // 1. Recargar subasta
+                const response = await subastaService.getDetalle(id);
+                const nuevaSubasta = response.data.data;
+
+                setSubasta(nuevaSubasta);
+
+                const usuarioActual = nuevaSubasta.usuarioActual;
+
+                console.log("liderAnterior:", liderAnterior);
+                console.log("nuevoLider:", nuevoLider);
+                console.log("usuarioActual:", usuarioActual);
+
+                // 2. VALIDACIÓN 
+                if (
+                    liderAnterior !== null &&
+                    liderAnterior !== nuevoLider &&
+                    liderAnterior === usuarioActual
+                ) {
+                    toast.error("Puja ha sido superada");
+                }
+
+            } catch (error) {
+                console.error(error);
+            }
+        });
+
+        return () => {
+            channel.unbind_all();
+            channel.unsubscribe();
+        };
+    }, [id]);
     // enviar puja 
     const handleRealizarPuja = async () => {
         try {
             setLoadingPuja(true);
 
-            const res = await pujaService.createPuja({
-                idSubasta: id,
-                monto: parseFloat(monto)
-            });
+            const res = await pujaService.createPuja(
+                { idSubasta: id, monto: parseFloat(monto) },
+                usuarioActual 
+            );
 
-            console.log("RESPUESTA PUJA:", res);
-
+            // actualizar subasta
             const response = await subastaService.getDetalle(id);
-            console.log("DETALLE:", response);
-
             setSubasta(response.data.data);
             setMonto("");
 
         } catch (error) {
-            console.error("ERROR COMPLETO:", error);
-            console.error("BACKEND:", error.response?.data);
-
+            const mensaje = error.response?.data?.message || "Error al realizar la puja";
+            toast.error(mensaje);
         } finally {
             setLoadingPuja(false);
         }
@@ -305,14 +347,14 @@ export function SubastaEnCurso() {
                             </div>
                         </div>
 
-                        {/* ══ SEPARADOR ══ */}
+                        {/*  separador */}
                         <div className="flex items-center gap-3 py-2">
                             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#C9A84C]/40 to-transparent" />
                             <Gavel className="w-3.5 h-3.5 text-[#C9A84C]/50" />
                             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#C9A84C]/40 to-transparent" />
                         </div>
 
-                        {/* ══ CAJA DE PUJA ══ */}
+                        {/*  CAJA DE PUJA  */}
                         <div className="relative border border-[#C9A84C]/60 bg-[#0E0D0B] overflow-hidden">
                             {/* Brillo superior */}
                             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#C9A84C] to-transparent" />
