@@ -106,6 +106,15 @@ export function SubastaEnCurso() {
 
         const channel = pusher.subscribe("subasta");
 
+        // Escuchar cuando la subasta se cierra
+        channel.bind("subasta-finalizada", async (data) => {
+        if (data.idSubasta == id) {
+            toast.info("¡La subasta ha finalizado!");
+            const response = await subastaService.getDetalle(id);
+            setSubasta(response.data.data);
+        }
+    });
+
         channel.bind("nueva-puja", async (data) => {
             try {
                 const { liderAnterior, idUsuario: nuevoLider } = data;
@@ -190,6 +199,8 @@ export function SubastaEnCurso() {
         ? subasta.historialPujas[0].nombreUsuario
         : null;
 
+        //botón a deshabilitar si la subasta no es activa
+        const estaFinalizada = subasta.idEstadoSubasta !== 1;
     return (
         <div
             className="min-h-screen text-[#F5F0E8]"
@@ -380,9 +391,12 @@ export function SubastaEnCurso() {
 
                                 <button
                                     onClick={handleRealizarPuja}
-                                    disabled={loadingPuja}
-                                    className="relative group w-full overflow-hidden flex items-center justify-center gap-3 py-3.5 bg-gradient-to-r from-[#C9A84C] via-[#E2C36A] to-[#C9A84C] border border-[#C9A84C] text-[#080807] font-bold text-[11px] tracking-[0.4em] uppercase transition-all duration-300 hover:shadow-[0_0_35px_rgba(201,168,76,0.5)] hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                    disabled={loadingPuja || estaFinalizada} // Deshabilitar si ya terminó
+                                    className="..."
                                 >
+                                    <span>
+                                        {estaFinalizada ? "Subasta Finalizada" : (loadingPuja ? "Pujando..." : "Confirmar Puja")}
+                                    </span>
                                     <span className="absolute inset-0 translate-x-[-110%] group-hover:translate-x-[110%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-20deg]" />
                                     <Gavel className="w-4 h-4 shrink-0" />
                                     <span>{loadingPuja ? "Pujando..." : "Confirmar Puja"}</span>

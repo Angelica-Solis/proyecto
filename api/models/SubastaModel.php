@@ -1,6 +1,7 @@
 <?php
 class SubastaModel
 {
+    
     public $enlace;
 
     public function __construct()
@@ -198,11 +199,10 @@ class SubastaModel
             // 1. LIMPIEZA TÉCNICA DE FECHAS
             $fInicioRaw = str_replace('T', ' ', $objeto->fechaInicio);
             $fCierreRaw = str_replace('T', ' ', $objeto->fechaCierre);
-
-            // A. VALIDACIÓN DE FECHAS (Tu lógica original intacta)
+            // A. VALIDACIÓN DE FECHAS 
             $ahora = new DateTime();
-            $fInicio = DateTime::createFromFormat('Y-m-d H:i', $fInicioRaw);
-            $fCierre = DateTime::createFromFormat('Y-m-d H:i', $fCierreRaw);
+            $fInicio = new DateTime($objeto->fechaInicio);
+            $fCierre = new DateTime($objeto->fechaCierre);
 
             if ($fInicio < $ahora) {
                 throw new Exception("La fecha de inicio no puede ser anterior a la actual.");
@@ -251,15 +251,20 @@ class SubastaModel
     //publicar subasta
     public function publicar($id)
     {
-        // Validar que la subasta exista y sea borrador
         $subasta = $this->get($id);
+
         if (!$subasta || $subasta->idEstadoSubasta != 4) {
             throw new Exception("Solo se pueden publicar subastas en estado Borrador.");
         }
 
-        // Validar fecha de inicio
-        if (strtotime($subasta->fechaInicio) < time()) {
-            throw new Exception("La fecha de inicio debe ser futura para poder publicar.");
+        $inicio = new DateTime($subasta->fechaInicio);
+        $ahora = new DateTime();
+
+        // margen de seguridad (2 minutos)
+        $margenSegundos = 120;
+
+        if (($inicio->getTimestamp() - $ahora->getTimestamp()) < $margenSegundos) {
+            throw new Exception("La subasta debe iniciar al menos en 2 minutos para poder publicarse.");
         }
 
         $vSql = "UPDATE subasta SET idEstadoSubasta = 1 WHERE id = $id;";
@@ -355,5 +360,25 @@ class SubastaModel
         } catch (Exception $e) {
             throw $e;
         }
+    }
+
+    //verificar y cerrar subasta
+        public function verificarYCerrar($id) {
+        $vSql = "SELECT fechaCierre, idEstadoSubasta FROM subasta WHERE id = $id";
+        $res = $this->enlace->executeSQL($vSql);
+        
+        if (!empty($res)) {
+            $subasta = $res[0];
+            $ahora = new DateTime("now", new DateTimeZone('America/Costa_Rica'));
+            $cierre = new DateTime($subasta->fechaCierre, new DateTimeZone('America/Costa_Rica'));
+
+            // Si ya pasó la hora y sigue "Activa" (id 1)
+            if ($ahora >= $cierre && $subasta->idEstadoSubasta == 1) {
+                $sqlClose = "UPDATE subasta SET idEstadoSubasta = 2 WHERE id = $id"; // 2 = Finalizada
+                $this->enlace->executeSQL_DML($sqlClose);
+                return true; // Se cerró en este momento
+            }
+        }
+        return false;
     }
 }

@@ -5,11 +5,18 @@ use Pusher\Pusher;
 
 class subasta
 {
-    public function get($id)
-    {
+    public function get($id) {
         try {
-            $response = new Response();
             $subastaM = new SubastaModel();
+            
+            // 1. Verificar si debe cerrarse antes de devolver los datos
+            if ($subastaM->verificarYCerrar($id)) {
+                // Si se cerró, notificamos a Pusher para que los que están viendo se enteren
+                $pusher = $this->getPusher();
+                $pusher->trigger("subasta", "subasta-finalizada", ["idSubasta" => $id]);
+            }
+
+            $response = new Response();
             $result = $subastaM->get($id);
             $response->toJSON($result);
         } catch (Exception $e) {
@@ -156,12 +163,19 @@ class subasta
             $request = new Request();
             $response = new Response();
             $inputJSON = $request->getJSON();
+            $subastaM = new SubastaModel();
+
+            //1. Verificar cierre ANTES de permitir la puja
+            if ($subastaM->verificarYCerrar($inputJSON->idSubasta)) {
+            $pusher = $this->getPusher();
+            $pusher->trigger("subasta", "subasta-finalizada", ["idSubasta" => $inputJSON->idSubasta]);
+            throw new Exception("La subasta ha finalizado y ya no acepta pujas.");
+            }
 
             // Leer usuario desde header, default 1
             $usuarioActual = $_SERVER['HTTP_X_USUARIO_ID'] ?? 1;
 
-            $subastaM = new SubastaModel();
-
+            
             // obtener líder anterior
             $subastaAntes = $subastaM->get($inputJSON->idSubasta);
             $liderAnterior = (!empty($subastaAntes->historialPujas))

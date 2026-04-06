@@ -185,7 +185,7 @@ export function SubastaTable() {
                                 <div className="flex items-center gap-1.5 mb-2">
                                     <Calendar className="w-3 h-3 text-[#C9A84C]/60" />
                                     <span className="text-[10px] tracking-[0.2em] uppercase text-[#F5F0E8]/40">
-                                        {item.fechaCierre || "—"}
+                                        {"cierre: "}{item.fechaCierre || "—"}
                                     </span>
                                 </div>
 

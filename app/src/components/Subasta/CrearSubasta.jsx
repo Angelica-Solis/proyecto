@@ -27,8 +27,6 @@ export function CrearSubasta() {
     }
   });
 
-  // Observamos fechas para validar cierre > inicio
-  const fechaInicio = watch("fechaInicio");
 
   useEffect(() => {
     // Cargar objetos activos para el selector
