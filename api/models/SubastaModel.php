@@ -364,21 +364,30 @@ class SubastaModel
 
     //verificar y cerrar subasta
         public function verificarYCerrar($id) {
-        $vSql = "SELECT fechaCierre, idEstadoSubasta FROM subasta WHERE id = $id";
-        $res = $this->enlace->executeSQL($vSql);
+    // 1. Consultamos los datos actuales
+    $vSql = "SELECT fechaCierre, idEstadoSubasta FROM subasta WHERE id = $id";
+    $res = $this->enlace->executeSQL($vSql);
+    
+    if (!empty($res)) {
+        $subasta = $res[0];
         
-        if (!empty($res)) {
-            $subasta = $res[0];
-            $ahora = new DateTime("now", new DateTimeZone('America/Costa_Rica'));
-            $cierre = new DateTime($subasta->fechaCierre, new DateTimeZone('America/Costa_Rica'));
+        // Usamos la zona horaria de Costa Rica para ambos
+        $tz = new DateTimeZone('America/Costa_Rica');
+        $ahora = new DateTime("now", $tz);
+        
+        // Convertimos la fecha de la DB asegurándonos que sea un string limpio
+        $cierre = new DateTime($subasta->fechaCierre, $tz);
 
-            // Si ya pasó la hora y sigue "Activa" (id 1)
-            if ($ahora >= $cierre && $subasta->idEstadoSubasta == 1) {
-                $sqlClose = "UPDATE subasta SET idEstadoSubasta = 2 WHERE id = $id"; // 2 = Finalizada
-                $this->enlace->executeSQL_DML($sqlClose);
-                return true; // Se cerró en este momento
-            }
+        // DEBUG: Esto te ayudará a ver en el log si las fechas coinciden con lo que esperas
+        // error_log("Subasta $id -> Ahora: " . $ahora->format('Y-m-d H:i:s') . " | Cierre: " . $cierre->format('Y-m-d H:i:s'));
+
+        // 2. Solo cerramos si REALMENTE el momento actual es MAYOR o IGUAL al cierre
+        if ($ahora >= $cierre && $subasta->idEstadoSubasta == 1) {
+            $sqlClose = "UPDATE subasta SET idEstadoSubasta = 2 WHERE id = $id";
+            $this->enlace->executeSQL_DML($sqlClose);
+            return true; 
         }
-        return false;
     }
+    return false;
+}
 }

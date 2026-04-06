@@ -281,10 +281,11 @@ export function SubastaEnCurso() {
                                     </p>
 
                                     {topBidder && (
-                                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#C9A84C]/20">
-                                            <Crown className="w-3.5 h-3.5 text-[#C9A84C]" />
-                                            <span className="text-[11px] tracking-[0.2em] uppercase text-[#C9A84C]/80">
-                                                Mejor postor: <span className="text-[#C9A84C] font-bold">{topBidder}</span>
+                                        <div className={`flex items-center gap-2 mt-3 pt-3 border-t ${estaFinalizada ? 'border-green-500/30 bg-green-500/5 p-2' : 'border-[#C9A84C]/20'}`}>
+                                            <Crown className={`w-3.5 h-3.5 ${estaFinalizada ? 'text-green-500' : 'text-[#C9A84C]'}`} />
+                                            <span className={`text-[11px] tracking-[0.2em] uppercase ${estaFinalizada ? 'text-green-400' : 'text-[#C9A84C]/80'}`}>
+                                                {estaFinalizada ? "Ganador Oficial: " : "Mejor postor: "} 
+                                                <span className="font-bold">{topBidder}</span>
                                             </span>
                                         </div>
                                     )}
@@ -388,18 +389,40 @@ export function SubastaEnCurso() {
                                     placeholder="Ingrese su monto"
                                     className="w-full px-4 py-3 bg-[#080807] border border-[#C9A84C]/25 text-[#F5F0E8] text-lg font-light placeholder:text-[#F5F0E8]/20 focus:border-[#C9A84C]/70 focus:outline-none transition-colors duration-200 font-mono"
                                 />
-
+                                    {/* Mensaje de Ganador - Colocar justo antes del botón */}
+                                    {estaFinalizada && topBidder && (
+                                        <div className="mb-6 p-4 border border-green-500/30 bg-green-500/5 rounded-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <Crown className="w-6 h-6 text-green-500 animate-pulse" />
+                                                <p className="text-[10px] tracking-[0.3em] uppercase text-green-500/70 font-semibold">
+                                                    Ganador Oficial
+                                                </p>
+                                                <p className="text-xl text-green-400 font-light tracking-tight">
+                                                    {topBidder}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
                                 <button
                                     onClick={handleRealizarPuja}
-                                    disabled={loadingPuja || estaFinalizada} // Deshabilitar si ya terminó
-                                    className="..."
+                                    disabled={loadingPuja || estaFinalizada}
+                                    className="relative group w-full overflow-hidden flex items-center justify-center gap-3 py-3.5 bg-gradient-to-r from-[#C9A84C] via-[#E2C36A] to-[#C9A84C] border border-[#C9A84C] text-[#080807] font-bold text-[11px] tracking-[0.4em] uppercase transition-all duration-300 hover:shadow-[0_0_35px_rgba(201,168,76,0.5)] hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                 >
-                                    <span>
-                                        {estaFinalizada ? "Subasta Finalizada" : (loadingPuja ? "Pujando..." : "Confirmar Puja")}
-                                    </span>
+                                    {/* Efecto visual de brillo */}
                                     <span className="absolute inset-0 translate-x-[-110%] group-hover:translate-x-[110%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-20deg]" />
-                                    <Gavel className="w-4 h-4 shrink-0" />
-                                    <span>{loadingPuja ? "Pujando..." : "Confirmar Puja"}</span>
+                                    
+                                    {/* Contenido condicional */}
+                                    {estaFinalizada ? (
+                                        <span className="flex items-center gap-2">
+                                            <Clock className="w-4 h-4" /> 
+                                            Subasta Finalizada
+                                        </span>
+                                    ) : (
+                                        <>
+                                            <Gavel className={`w-4 h-4 shrink-0 ${loadingPuja ? 'animate-bounce' : ''}`} />
+                                            <span>{loadingPuja ? "Procesando..." : "Confirmar Puja"}</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>
