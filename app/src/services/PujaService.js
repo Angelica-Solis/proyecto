@@ -10,11 +10,13 @@ class PujaService {
     }
 
     createPuja(data, usuarioId) {
-        return axios.post(BASE_PUJA, data, {
-            headers: {
-                "X-Usuario-Id": usuarioId, //ID del usuario actual
-            }
+        return axios.post(BASE_PUJA, {
+            ...data,
+            idUsuario: usuarioId
         });
+    }
+    obtenerCompradores() {
+        return axios.get(BASE_URL + '/obtenerCompradores/');
     }
 }
 

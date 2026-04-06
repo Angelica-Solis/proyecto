@@ -78,4 +78,14 @@ class PujaModel
             "idUsuario" => $idUsuario
         ];
     }
+    // obetener unicamente pujadores
+    public function obtenerCompradores()
+    {
+        $sql = "SELECT id, nombreUsuario
+            FROM usuario 
+            WHERE IdRol = 3";
+
+        $vRes = $this->enlace->executeSQL($sql);
+        return $vRes;
+    }
 }

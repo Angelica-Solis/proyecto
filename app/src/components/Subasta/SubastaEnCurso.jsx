@@ -5,6 +5,7 @@ import subastaService from "@/services/SubastaService";
 import pujaService from "@/services/PujaService";
 import { toast } from "sonner";
 import Pusher from "pusher-js";
+import { useRef } from "react";
 
 const fmt = (n) =>
     new Intl.NumberFormat("es-CR", { style: "currency", currency: "CRC", maximumFractionDigits: 0 }).format(n);
@@ -83,6 +84,15 @@ export function SubastaEnCurso() {
     const [monto, setMonto] = useState("");
     const [loadingPuja, setLoadingPuja] = useState(false);
     const [usuarioActual, setUsuarioActual] = useState(5);
+    const [compradores, setCompradores] = useState([]);
+    const [indexUsuario, setIndexUsuario] = useState(0);
+    const usuarioActualRef = useRef(usuarioActual);
+
+
+    // cada vez que cambie usuarioActual, se actualiza la ref
+    useEffect(() => {
+        usuarioActualRef.current = usuarioActual;
+    }, [usuarioActual]);
 
     useEffect(() => {
         const cargar = async () => {
@@ -98,6 +108,27 @@ export function SubastaEnCurso() {
         cargar();
     }, [id]);
 
+    //CARGAR COMPRADORES
+    useEffect(() => {
+        const cargarCompradores = async () => {
+            try {
+                const res = await pujaService.obtenerCompradores();
+                const lista = res.data.data;
+
+                setCompradores(lista);
+
+                if (lista.length > 0) {
+                    setUsuarioActual(lista[0].id);
+                }
+
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        cargarCompradores();
+    }, []);
+
     //PUSHER
     useEffect(() => {
         const pusher = new Pusher(import.meta.env.VITE_PUSHER_KEY, {
@@ -106,36 +137,25 @@ export function SubastaEnCurso() {
 
         const channel = pusher.subscribe("subasta");
 
-        // Escuchar cuando la subasta se cierra
-        channel.bind("subasta-finalizada", async (data) => {
-        if (data.idSubasta == id) {
-            toast.info("¡La subasta ha finalizado!");
-            const response = await subastaService.getDetalle(id);
-            setSubasta(response.data.data);
-        }
-    });
-
         channel.bind("nueva-puja", async (data) => {
             try {
                 const { liderAnterior, idUsuario: nuevoLider } = data;
 
-                // 1. Recargar subasta
                 const response = await subastaService.getDetalle(id);
                 const nuevaSubasta = response.data.data;
-
                 setSubasta(nuevaSubasta);
 
-                const usuarioActual = nuevaSubasta.usuarioActual;
+                // Usamos la ref en vez del estado
+                const usuarioActualValue = usuarioActualRef.current;
 
                 console.log("liderAnterior:", liderAnterior);
                 console.log("nuevoLider:", nuevoLider);
-                console.log("usuarioActual:", usuarioActual);
+                console.log("usuarioActual:", usuarioActualValue);
 
-                // 2. VALIDACIÓN 
                 if (
                     liderAnterior !== null &&
                     liderAnterior !== nuevoLider &&
-                    liderAnterior === usuarioActual
+                    liderAnterior === usuarioActualValue
                 ) {
                     toast.error("Puja ha sido superada");
                 }
@@ -157,7 +177,7 @@ export function SubastaEnCurso() {
 
             const res = await pujaService.createPuja(
                 { idSubasta: id, monto: parseFloat(monto) },
-                usuarioActual 
+                usuarioActual
             );
 
             // actualizar subasta
@@ -171,6 +191,18 @@ export function SubastaEnCurso() {
         } finally {
             setLoadingPuja(false);
         }
+    };
+
+    const cambiarUsuario = () => {
+        if (compradores.length === 0) return;
+
+        const nuevoIndex = (indexUsuario + 1) % compradores.length;
+        setIndexUsuario(nuevoIndex);
+
+        const nuevoUsuario = compradores[nuevoIndex];
+        setUsuarioActual(nuevoUsuario.id);
+
+        toast.success(`Ahora estás pujando como: ${nuevoUsuario.nombreUsuario}`);
     };
 
     if (loading) return (
@@ -199,8 +231,8 @@ export function SubastaEnCurso() {
         ? subasta.historialPujas[0].nombreUsuario
         : null;
 
-        //botón a deshabilitar si la subasta no es activa
-        const estaFinalizada = subasta.idEstadoSubasta !== 1;
+    //botón a deshabilitar si la subasta no es activa
+    const estaFinalizada = subasta.idEstadoSubasta !== 1;
     return (
         <div
             className="min-h-screen text-[#F5F0E8]"
@@ -284,7 +316,7 @@ export function SubastaEnCurso() {
                                         <div className={`flex items-center gap-2 mt-3 pt-3 border-t ${estaFinalizada ? 'border-green-500/30 bg-green-500/5 p-2' : 'border-[#C9A84C]/20'}`}>
                                             <Crown className={`w-3.5 h-3.5 ${estaFinalizada ? 'text-green-500' : 'text-[#C9A84C]'}`} />
                                             <span className={`text-[11px] tracking-[0.2em] uppercase ${estaFinalizada ? 'text-green-400' : 'text-[#C9A84C]/80'}`}>
-                                                {estaFinalizada ? "Ganador Oficial: " : "Mejor postor: "} 
+                                                {estaFinalizada ? "Ganador Oficial: " : "Mejor postor: "}
                                                 <span className="font-bold">{topBidder}</span>
                                             </span>
                                         </div>
@@ -389,44 +421,52 @@ export function SubastaEnCurso() {
                                     placeholder="Ingrese su monto"
                                     className="w-full px-4 py-3 bg-[#080807] border border-[#C9A84C]/25 text-[#F5F0E8] text-lg font-light placeholder:text-[#F5F0E8]/20 focus:border-[#C9A84C]/70 focus:outline-none transition-colors duration-200 font-mono"
                                 />
-                                    {/* Mensaje de Ganador - Colocar justo antes del botón */}
-                                    {estaFinalizada && topBidder && (
-                                        <div className="mb-6 p-4 border border-green-500/30 bg-green-500/5 rounded-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
-                                            <div className="flex flex-col items-center gap-2">
-                                                <Crown className="w-6 h-6 text-green-500 animate-pulse" />
-                                                <p className="text-[10px] tracking-[0.3em] uppercase text-green-500/70 font-semibold">
-                                                    Ganador Oficial
-                                                </p>
-                                                <p className="text-xl text-green-400 font-light tracking-tight">
-                                                    {topBidder}
-                                                </p>
-                                            </div>
+                                {/* Mensaje de Ganador - Colocar justo antes del botón */}
+                                {estaFinalizada && topBidder && (
+                                    <div className="mb-6 p-4 border border-green-500/30 bg-green-500/5 rounded-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Crown className="w-6 h-6 text-green-500 animate-pulse" />
+                                            <p className="text-[10px] tracking-[0.3em] uppercase text-green-500/70 font-semibold">
+                                                Ganador Oficial
+                                            </p>
+                                            <p className="text-xl text-green-400 font-light tracking-tight">
+                                                {topBidder}
+                                            </p>
                                         </div>
-                                    )}
+                                    </div>
+                                )}
                                 <button
                                     onClick={handleRealizarPuja}
-                                    disabled={loadingPuja || estaFinalizada}
-                                    className="relative group w-full overflow-hidden flex items-center justify-center gap-3 py-3.5 bg-gradient-to-r from-[#C9A84C] via-[#E2C36A] to-[#C9A84C] border border-[#C9A84C] text-[#080807] font-bold text-[11px] tracking-[0.4em] uppercase transition-all duration-300 hover:shadow-[0_0_35px_rgba(201,168,76,0.5)] hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                    // disabled={loadingPuja || estaFinalizada} ❌ Deshabilitado eliminado para pruebas
+                                    className="relative group w-full overflow-hidden flex items-center justify-center gap-3 py-3.5 bg-gradient-to-r from-[#C9A84C] via-[#E2C36A] to-[#C9A84C] border border-[#C9A84C] text-[#080807] font-bold text-[11px] tracking-[0.4em] uppercase transition-all duration-300 hover:shadow-[0_0_35px_rgba(201,168,76,0.5)] hover:scale-[1.01] active:scale-[0.98]"
                                 >
                                     {/* Efecto visual de brillo */}
                                     <span className="absolute inset-0 translate-x-[-110%] group-hover:translate-x-[110%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-20deg]" />
-                                    
-                                    {/* Contenido condicional */}
-                                    {estaFinalizada ? (
-                                        <span className="flex items-center gap-2">
-                                            <Clock className="w-4 h-4" /> 
-                                            Subasta Finalizada
-                                        </span>
-                                    ) : (
-                                        <>
-                                            <Gavel className={`w-4 h-4 shrink-0 ${loadingPuja ? 'animate-bounce' : ''}`} />
-                                            <span>{loadingPuja ? "Procesando..." : "Confirmar Puja"}</span>
-                                        </>
-                                    )}
+
+                                    {/* ❌ Se elimina lógica de subasta finalizada para mantener botón activo */}
+                                    {/*
+    {estaFinalizada ? (
+        <span className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            Subasta Finalizada
+        </span>
+    ) : (
+    */}
+                                    <>
+                                        <Gavel className={`w-4 h-4 shrink-0 ${loadingPuja ? 'animate-bounce' : ''}`} />
+                                        <span>{loadingPuja ? "Procesando..." : "Confirmar Puja"}</span>
+                                    </>
+                                    {/*
+    )}
+    */}
                                 </button>
                             </div>
                         </div>
-
+                        <button
+                            onClick={cambiarUsuario}
+                            className="w-full py-2 border border-[#C9A84C]/40 text-[#C9A84C] text-[10px] tracking-[0.3em] uppercase hover:bg-[#C9A84C]/10 transition disabled:opacity-40">
+                            Cambiar Usuario
+                        </button>
                     </div>
                 </div>
 

@@ -5,10 +5,11 @@ use Pusher\Pusher;
 
 class subasta
 {
-    public function get($id) {
+    public function get($id)
+    {
         try {
             $subastaM = new SubastaModel();
-            
+
             // 1. Verificar si debe cerrarse antes de devolver los datos
             if ($subastaM->verificarYCerrar($id)) {
                 // Si se cerró, notificamos a Pusher para que los que están viendo se enteren
@@ -167,15 +168,15 @@ class subasta
 
             //1. Verificar cierre ANTES de permitir la puja
             if ($subastaM->verificarYCerrar($inputJSON->idSubasta)) {
-            $pusher = $this->getPusher();
-            $pusher->trigger("subasta", "subasta-finalizada", ["idSubasta" => $inputJSON->idSubasta]);
-            throw new Exception("La subasta ha finalizado y ya no acepta pujas.");
+                $pusher = $this->getPusher();
+                $pusher->trigger("subasta", "subasta-finalizada", ["idSubasta" => $inputJSON->idSubasta]);
+                throw new Exception("La subasta ha finalizado y ya no acepta pujas.");
             }
 
-            // Leer usuario desde header, default 1
-            $usuarioActual = $_SERVER['HTTP_X_USUARIO_ID'] ?? 1;
+            // default 1
+            $usuarioActual = $inputJSON->idUsuario ?? 1;
 
-            
+
             // obtener líder anterior
             $subastaAntes = $subastaM->get($inputJSON->idSubasta);
             $liderAnterior = (!empty($subastaAntes->historialPujas))
@@ -195,6 +196,19 @@ class subasta
                 "usuarioActual" => $usuarioActual
             ];
             $pusher->trigger("subasta", "nueva-puja", $data);
+
+            $response->toJSON($result);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
+    //Obtener unicamente pujadores
+    public function obtenerCompradores()
+    {
+        try {       
+            $response = new Response();
+            $pujaM = new PujaModel();
+            $result = $pujaM->obtenerCompradores();
 
             $response->toJSON($result);
         } catch (Exception $e) {
