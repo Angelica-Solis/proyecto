@@ -192,6 +192,56 @@ export function SubastaEnCurso() {
             setLoadingPuja(false);
         }
     };
+    const [tiempoRestante, setTiempoRestante] = useState(0);
+    useEffect(() => {
+    if (!subasta?.fechaCierre) return;
+
+    const cerrarSubastaFrontend = async () => {
+    try {
+        // Llama al backend para que cambie el estado
+        await subastaService.getDetalle(id); 
+        // 👆 esto ya ejecuta verificarYCerrar()
+
+        // vuelves a cargar estado actualizado
+        const response = await subastaService.getDetalle(id);
+        setSubasta(response.data.data);
+
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+    const interval = setInterval(() => {
+        const ahora = new Date().getTime();
+        const cierre = new Date(subasta.fechaCierre).getTime();
+
+        const diferencia = cierre - ahora;
+
+        if (diferencia <= 0) {
+            setTiempoRestante(0);
+
+            // 🔴 AQUÍ está la clave
+            cerrarSubastaFrontend();
+
+            clearInterval(interval);
+        } else {
+            setTiempoRestante(diferencia);
+        }
+
+    }, 1000);
+
+    return () => clearInterval(interval);
+}, [subasta]);
+
+const formatearTiempo = (ms) => {
+    const totalSegundos = Math.floor(ms / 1000); // Convertir milisegundos a segundos
+    const minutos = Math.floor(totalSegundos / 60); // Calcular los minutos
+    const segundos = totalSegundos % 60; // Calcular los segundos restantes
+
+    // Retornar el tiempo en formato "minutos:segundos", asegurando que los segundos tengan dos dígitos
+    return `${minutos} min ${segundos.toString().padStart(2, "0")} seg`;
+};
+
 
     const cambiarUsuario = () => {
         if (compradores.length === 0) return;
@@ -232,7 +282,10 @@ export function SubastaEnCurso() {
         : null;
 
     //botón a deshabilitar si la subasta no es activa
-    const estaFinalizada = subasta.idEstadoSubasta !== 1;
+    const ahora = new Date().getTime();
+    const cierre = new Date(subasta.fechaCierre).getTime();
+
+    const estaFinalizada = ahora >= cierre || subasta.idEstadoSubasta !== '1';
     return (
         <div
             className="min-h-screen text-[#F5F0E8]"
@@ -303,27 +356,47 @@ export function SubastaEnCurso() {
 
                                 <div className="relative p-6">
                                     <div className="flex items-center justify-between mb-1">
-                                        <SectionLabel>Puja más Alta Actual</SectionLabel>
-                                        <TrendingUp className="w-4 h-4 text-[#C9A84C]" />
+                                    <SectionLabel>Puja más Alta Actual</SectionLabel>
+                                    <TrendingUp className="w-4 h-4 text-[#C9A84C]" />
                                     </div>
 
-                                    <p className="text-4xl md:text-5xl font-light text-[#C9A84C] tracking-tight mt-2"
-                                        style={{ textShadow: "0 0 40px rgba(201,168,76,0.4)" }}>
-                                        {fmt(pujaActual)}
+                                    <p
+                                    className="text-4xl md:text-5xl font-light text-[#C9A84C] tracking-tight mt-2"
+                                    style={{ textShadow: "0 0 40px rgba(201,168,76,0.4)" }}
+                                    >
+                                    {fmt(pujaActual)}
                                     </p>
 
+                                    {/* Timer placed below the bid amount */}
+                                    <div className="mt-2 text-[14px] font-mono text-[#C9A84C]/50">
+                                    <p>{"Tiempo restante: " + formatearTiempo(tiempoRestante)}</p>
+                                    </div>
+
                                     {topBidder && (
-                                        <div className={`flex items-center gap-2 mt-3 pt-3 border-t ${estaFinalizada ? 'border-green-500/30 bg-green-500/5 p-2' : 'border-[#C9A84C]/20'}`}>
-                                            <Crown className={`w-3.5 h-3.5 ${estaFinalizada ? 'text-green-500' : 'text-[#C9A84C]'}`} />
-                                            <span className={`text-[11px] tracking-[0.2em] uppercase ${estaFinalizada ? 'text-green-400' : 'text-[#C9A84C]/80'}`}>
-                                                {estaFinalizada ? "Ganador Oficial: " : "Mejor postor: "}
-                                                <span className="font-bold">{topBidder}</span>
-                                            </span>
-                                        </div>
+                                    <div
+                                        className={`flex items-center gap-2 mt-3 pt-3 border-t ${
+                                        estaFinalizada
+                                            ? "border-green-500/30 bg-green-500/5 p-2"
+                                            : "border-[#C9A84C]/20"
+                                        }`}
+                                    >
+                                        <Crown
+                                        className={`w-3.5 h-3.5 ${
+                                            estaFinalizada ? "text-green-500" : "text-[#C9A84C]"
+                                        }`}
+                                        />
+                                        <span
+                                        className={`text-[11px] tracking-[0.2em] uppercase ${
+                                            estaFinalizada ? "text-green-400" : "text-[#C9A84C]/80"
+                                        }`}
+                                        >
+                                        {estaFinalizada ? "Ganador Oficial: " : "Mejor postor: "}
+                                        <span className="font-bold">{topBidder}</span>
+                                        </span>
+                                    </div>
                                     )}
                                 </div>
-                            </div>
-
+                                </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="border border-[#C9A84C]/15 bg-[#0E0D0B] p-4 hover:border-[#C9A84C]/35 transition-colors">
                                     <SectionLabel>Precio Base</SectionLabel>
@@ -435,30 +508,20 @@ export function SubastaEnCurso() {
                                         </div>
                                     </div>
                                 )}
+                                {/* Botón de puja que esta habilitado o no segun el estado de la subasta */}
                                 <button
-                                    onClick={handleRealizarPuja}
-                                    // disabled={loadingPuja || estaFinalizada} ❌ Deshabilitado eliminado para pruebas
-                                    className="relative group w-full overflow-hidden flex items-center justify-center gap-3 py-3.5 bg-gradient-to-r from-[#C9A84C] via-[#E2C36A] to-[#C9A84C] border border-[#C9A84C] text-[#080807] font-bold text-[11px] tracking-[0.4em] uppercase transition-all duration-300 hover:shadow-[0_0_35px_rgba(201,168,76,0.5)] hover:scale-[1.01] active:scale-[0.98]"
+                                onClick={handleRealizarPuja}
+                                disabled={loadingPuja || estaFinalizada}
+                                className={`relative group w-full overflow-hidden flex items-center justify-center gap-3 py-3.5 
+                                border font-bold text-[11px] tracking-[0.4em] uppercase transition-all duration-300
+                                ${estaFinalizada
+                                    ? "bg-gray-500 border-gray-500 text-gray-300 cursor-not-allowed opacity-50"
+                                    : "bg-gradient-to-r from-[#C9A84C] via-[#E2C36A] to-[#C9A84C] border-[#C9A84C] text-[#080807] hover:shadow-[0_0_35px_rgba(201,168,76,0.5)] hover:scale-[1.01] active:scale-[0.98]"
+                                }`}
                                 >
-                                    {/* Efecto visual de brillo */}
                                     <span className="absolute inset-0 translate-x-[-110%] group-hover:translate-x-[110%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-20deg]" />
-
-                                    {/* ❌ Se elimina lógica de subasta finalizada para mantener botón activo */}
-                                    {/*
-    {estaFinalizada ? (
-        <span className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Subasta Finalizada
-        </span>
-    ) : (
-    */}
-                                    <>
-                                        <Gavel className={`w-4 h-4 shrink-0 ${loadingPuja ? 'animate-bounce' : ''}`} />
-                                        <span>{loadingPuja ? "Procesando..." : "Confirmar Puja"}</span>
-                                    </>
-                                    {/*
-    )}
-    */}
+                                    <Gavel className={`w-4 h-4 shrink-0 ${loadingPuja ? 'animate-bounce' : ''}`} />
+                                    <span>{loadingPuja ? "Procesando..." : "Confirmar Puja"}</span>
                                 </button>
                             </div>
                         </div>

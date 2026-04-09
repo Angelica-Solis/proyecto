@@ -12,7 +12,13 @@ class SubastaModel
     public function getActivas()
     {
         $objetoM = new ObjetoModel();
-
+        // Antes de listar, verificamos si hay subastas que deban cerrarse por fecha
+        $this->enlace->executeSQL_DML("
+            UPDATE subasta 
+            SET idEstadoSubasta = 2 
+            WHERE idEstadoSubasta = 1 
+            AND fechaCierre <= NOW()
+        ");
         // 1. Consulta simple: Solo subastas con estado 1 (activa)
         $vSQL = "SELECT * FROM subasta WHERE idEstadoSubasta = 1 ORDER BY fechaInicio DESC;";
         $vResultado = $this->enlace->ExecuteSQL($vSQL);
@@ -365,7 +371,7 @@ class SubastaModel
     //verificar y cerrar subasta
         public function verificarYCerrar($id) {
     // 1. Consultamos los datos actuales
-    $vSql = "SELECT fechaCierre, idEstadoSubasta FROM subasta WHERE id = $id";
+    $vSql = "SELECT fechaCierre, idEstadoSubasta, idObjeto FROM subasta WHERE id = $id";
     $res = $this->enlace->executeSQL($vSql);
     
     if (!empty($res)) {
@@ -385,6 +391,11 @@ class SubastaModel
         if ($ahora >= $cierre && $subasta->idEstadoSubasta == 1) {
             $sqlClose = "UPDATE subasta SET idEstadoSubasta = 2 WHERE id = $id";
             $this->enlace->executeSQL_DML($sqlClose);
+            // 3. Actualizamos el estado del objeto a "Vendidos" (idEstadoObjeto = 3)
+            // Actualizamos el estado del objeto relacionado
+            $idObjeto = $subasta->idObjeto; // Obtenemos el idObjeto de la consulta inicial
+            $sqlUpdateObjeto = "UPDATE objeto SET idEstadoObjeto = 3 WHERE id = $idObjeto";
+            $this->enlace->executeSQL_DML($sqlUpdateObjeto);
             return true; 
         }
     }
