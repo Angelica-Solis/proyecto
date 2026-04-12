@@ -370,35 +370,68 @@ class SubastaModel
 
     //verificar y cerrar subasta
         public function verificarYCerrar($id) {
-    // 1. Consultamos los datos actuales
-    $vSql = "SELECT fechaCierre, idEstadoSubasta, idObjeto FROM subasta WHERE id = $id";
-    $res = $this->enlace->executeSQL($vSql);
-    
-    if (!empty($res)) {
-        $subasta = $res[0];
+    try {
+        // 1. Consultamos la subasta
+        $vSql = "SELECT fechaCierre, idEstadoSubasta, idObjeto FROM subasta WHERE id = $id";
+        $res = $this->enlace->executeSQL($vSql);
         
-        // Usamos la zona horaria de Costa Rica para ambos
+        if (empty($res)) return false;
+
+        $subasta = $res[0];
+
         $tz = new DateTimeZone('America/Costa_Rica');
         $ahora = new DateTime("now", $tz);
-        
-        // Convertimos la fecha de la DB asegurándonos que sea un string limpio
         $cierre = new DateTime($subasta->fechaCierre, $tz);
 
-        // DEBUG: Esto te ayudará a ver en el log si las fechas coinciden con lo que esperas
-        // error_log("Subasta $id -> Ahora: " . $ahora->format('Y-m-d H:i:s') . " | Cierre: " . $cierre->format('Y-m-d H:i:s'));
-
-        // 2. Solo cerramos si REALMENTE el momento actual es MAYOR o IGUAL al cierre
+        // 2. Validar cierre
         if ($ahora >= $cierre && $subasta->idEstadoSubasta == 1) {
-            $sqlClose = "UPDATE subasta SET idEstadoSubasta = 2 WHERE id = $id";
-            $this->enlace->executeSQL_DML($sqlClose);
-            // 3. Actualizamos el estado del objeto a "Vendidos" (idEstadoObjeto = 3)
-            // Actualizamos el estado del objeto relacionado
-            $idObjeto = $subasta->idObjeto; // Obtenemos el idObjeto de la consulta inicial
-            $sqlUpdateObjeto = "UPDATE objeto SET idEstadoObjeto = 3 WHERE id = $idObjeto";
-            $this->enlace->executeSQL_DML($sqlUpdateObjeto);
-            return true; 
+
+            // 🔹 Cerrar subasta
+            $this->enlace->executeSQL_DML("UPDATE subasta SET idEstadoSubasta = 2 WHERE id = $id");
+
+            // 🔹 Actualizar objeto a vendido
+            $this->enlace->executeSQL_DML("UPDATE objeto SET idEstadoObjeto = 3 WHERE id = $subasta->idObjeto");
+
+            // 🔴 VALIDAR SI YA EXISTE RESULTADO
+            $sqlExiste = "SELECT COUNT(*) as total FROM resultado_subasta WHERE idSubasta = $id";
+            $existe = $this->enlace->executeSQL($sqlExiste);
+
+            if (!empty($existe) && $existe[0]->total == 0) {
+
+                // 🔹 Obtener puja ganadora
+                $sqlPuja = "SELECT * FROM puja 
+                            WHERE idSubasta = $id 
+                            ORDER BY monto DESC 
+                            LIMIT 1";
+
+                $puja = $this->enlace->executeSQL($sqlPuja);
+
+                if (!empty($puja)) {
+                    $puja = $puja[0];
+
+                    // 🔹 Crear resultado
+                    $sqlResultado = "INSERT INTO resultado_subasta 
+                        (idSubasta, idUsuarioGanador, idPujaGanadora, montoFinal)
+                        VALUES ($id, $puja->idUsuario, $puja->id, $puja->monto)";
+
+                    $idResultado = $this->enlace->executeSQL_DML_last($sqlResultado);
+
+                    // 🔹 Crear pago
+                    $sqlPago = "INSERT INTO pago 
+                        (idResultado, montoPagado, idEstadoPago)
+                        VALUES ($idResultado, $puja->monto, 1)";
+
+                    $this->enlace->executeSQL_DML($sqlPago);
+                }
+            }
+
+            return true;
         }
+
+    } catch (Exception $e) {
+        error_log("Error en verificarYCerrar: " . $e->getMessage());
     }
+
     return false;
 }
 }

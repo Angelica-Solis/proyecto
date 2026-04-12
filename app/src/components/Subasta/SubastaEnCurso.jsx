@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Crown, Clock, TrendingUp, User, Gavel, ChevronLeft, ChevronRight, History } from "lucide-react";
 import subastaService from "@/services/SubastaService";
+import pagoService from "@/services/PagoService";
 import pujaService from "@/services/PujaService";
 import { toast } from "sonner";
 import Pusher from "pusher-js";
@@ -87,6 +88,8 @@ export function SubastaEnCurso() {
     const [compradores, setCompradores] = useState([]);
     const [indexUsuario, setIndexUsuario] = useState(0);
     const usuarioActualRef = useRef(usuarioActual);
+    const [pago, setPago] = useState(null);
+    const [cerrada, setCerrada] = useState(false);
 
 
     // cada vez que cambie usuarioActual, se actualiza la ref
@@ -198,11 +201,6 @@ export function SubastaEnCurso() {
 
     const cerrarSubastaFrontend = async () => {
     try {
-        // Llama al backend para que cambie el estado
-        await subastaService.getDetalle(id); 
-        // 👆 esto ya ejecuta verificarYCerrar()
-
-        // vuelves a cargar estado actualizado
         const response = await subastaService.getDetalle(id);
         setSubasta(response.data.data);
 
@@ -217,21 +215,34 @@ export function SubastaEnCurso() {
 
         const diferencia = cierre - ahora;
 
-        if (diferencia <= 0) {
-            setTiempoRestante(0);
-
-            // 🔴 AQUÍ está la clave
-            cerrarSubastaFrontend();
-
-            clearInterval(interval);
-        } else {
+        if (diferencia <= 0 && !cerrada) {
+        setCerrada(true);
+        cerrarSubastaFrontend();
+        setTiempoRestante(0);
+        clearInterval(interval);
+    } else {
             setTiempoRestante(diferencia);
-        }
+            }
 
     }, 1000);
 
     return () => clearInterval(interval);
 }, [subasta]);
+
+useEffect(() => {
+    const cargarPago = async () => {
+        try {
+            if (subasta && (subasta.idEstadoSubasta !== '1')) {
+                const res = await pagoService.getPagoBySubasta(id);
+                setPago(res.data.data);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    cargarPago();
+}, [subasta, id]);
 
 const formatearTiempo = (ms) => {
     const totalSegundos = Math.floor(ms / 1000); // Convertir milisegundos a segundos
@@ -254,6 +265,20 @@ const formatearTiempo = (ms) => {
 
         toast.success(`Ahora estás pujando como: ${nuevoUsuario.nombreUsuario}`);
     };
+
+    const confirmarPago = async () => {
+    try {
+        await pagoService.confirmarPago(pago.id);
+
+        const res = await pagoService.getPagoBySubasta(id);
+        setPago(res.data.data);
+
+        toast.success("Pago confirmado");
+    } catch (error) {
+        console.error(error);
+        toast.error("Error al confirmar pago");
+    }
+};
 
     if (loading) return (
         <div className="min-h-screen bg-[#080807] flex items-center justify-center">
@@ -508,6 +533,28 @@ const formatearTiempo = (ms) => {
                                         </div>
                                     </div>
                                 )}
+
+                                {estaFinalizada && pago && (
+                                <div className="mb-4 p-4 border border-blue-500/30 bg-blue-500/5 rounded-sm">
+                                    <p className="text-sm text-blue-300">
+                                        Estado del pago: <strong>{pago.estado}</strong>
+                                    </p>
+
+                                    <p className="text-sm text-blue-300">
+                                        Monto pagado: <strong>{fmt(pago.montoPagado)}</strong>
+                                    </p>
+
+                                    {pago.idEstadoPago === 1 && (
+                                        <button
+                                            onClick={confirmarPago}
+                                            className="mt-3 px-4 py-2 bg-green-600 text-white hover:bg-green-700 transition"
+                                        >
+                                            Confirmar Pago
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
                                 {/* Botón de puja que esta habilitado o no segun el estado de la subasta */}
                                 <button
                                 onClick={handleRealizarPuja}
