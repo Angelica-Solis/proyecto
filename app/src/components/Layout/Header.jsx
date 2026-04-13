@@ -25,23 +25,35 @@ import {
   MenubarItem,
 } from "@/components/ui/menubar";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
+import { useUser } from "@/hooks/useUser";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 //Paleta dorada 
 const G = {
-  gold:       "#C9A84C",
-  goldLight:  "#E2C97E",
-  goldDim:    "rgba(201,168,76,0.55)",
-  goldGhost:  "rgba(201,168,76,0.07)",
+  gold: "#C9A84C",
+  goldLight: "#E2C97E",
+  goldDim: "rgba(201,168,76,0.55)",
+  goldGhost: "rgba(201,168,76,0.07)",
   goldBorder: "rgba(201,168,76,0.22)",
-  dark:       "#080807",
-  white:      "#F5F0E8",
-  whiteDim:   "rgba(245,240,232,0.55)",
+  dark: "#080807",
+  white: "#F5F0E8",
+  whiteDim: "rgba(245,240,232,0.55)",
 };
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [scrolled,   setScrolled]   = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const userEmail = "Invitado";
+
+  const { clearUser } = useUser();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    clearUser();
+    toast.success("Sesión cerrada correctamente");
+    navigate("/user/login");
+  };
 
   // Detectar scroll para cambiar fondo del header
   if (typeof window !== "undefined") {
@@ -55,18 +67,18 @@ export default function Header() {
   ];
 
   const mantItems = [
-    { title: "Listar Usuarios",       href: "/user/table",    icon: <UsersRound className="h-4 w-4" /> },
-    { title: "Listado de Objetos",    href: "/objeto/listado",icon: <CarFront   className="h-4 w-4" /> },
-    { title: "Gráfico de Alquileres", href: "/rental/graph",  icon: <ChartArea  className="h-4 w-4" /> },
+    { title: "Listar Usuarios", href: "/user/table", icon: <UsersRound className="h-4 w-4" /> },
+    { title: "Listado de Objetos", href: "/objeto/listado", icon: <CarFront className="h-4 w-4" /> },
+    { title: "Gráfico de Alquileres", href: "/rental/graph", icon: <ChartArea className="h-4 w-4" /> },
   ];
   const mantenimientoItems = [
-  { title: "Mantenimiento de Subastas", href: "/mantenimiento/subastas", icon: <Gavel className="h-4 w-4" /> },
+    { title: "Mantenimiento de Subastas", href: "/mantenimiento/subastas", icon: <Gavel className="h-4 w-4" /> },
   ];
 
   const userItems = [
-    { title: "Login",       href: "/user/login",   icon: <LogIn    className="h-4 w-4" /> },
-    { title: "Registrarse", href: "/user/create",  icon: <UserPlus className="h-4 w-4" /> },
-    { title: "Logout",      href: "#login",        icon: <LogOut   className="h-4 w-4" /> },
+    { title: "Login", href: "/user/login", icon: <LogIn className="h-4 w-4" /> },
+    { title: "Registrarse", href: "/user/create", icon: <UserPlus className="h-4 w-4" /> },
+    { title: "Logout", action: "logout", icon: <LogOut className="h-4 w-4" /> },
   ];
 
   //Estilos reutilizables
@@ -138,12 +150,16 @@ export default function Header() {
             <div style={{ width: 10, height: 10, background: G.gold, transform: "rotate(45deg)" }} />
           </div>
           <div className="hidden sm:block">
-            <p style={{ margin: 0, fontFamily: "'Montserrat', sans-serif", fontWeight: 400,
-              fontSize: 13, letterSpacing: "0.28em", textTransform: "uppercase", color: G.white }}>
+            <p style={{
+              margin: 0, fontFamily: "'Montserrat', sans-serif", fontWeight: 400,
+              fontSize: 13, letterSpacing: "0.28em", textTransform: "uppercase", color: G.white
+            }}>
               El Garaje
             </p>
-            <p style={{ margin: 0, fontFamily: "'Montserrat', sans-serif", fontWeight: 300,
-              fontSize: 7, letterSpacing: "0.3em", textTransform: "uppercase", color: G.gold }}>
+            <p style={{
+              margin: 0, fontFamily: "'Montserrat', sans-serif", fontWeight: 300,
+              fontSize: 7, letterSpacing: "0.3em", textTransform: "uppercase", color: G.gold
+            }}>
               Subastas de Lujo
             </p>
           </div>
@@ -214,14 +230,40 @@ export default function Header() {
               </MenubarTrigger>
               <MenubarContent style={dropdownStyle}>
                 {userItems.map(item => (
-                  <MenubarItem key={item.href} asChild>
-                    <Link to={item.href} style={dropItemStyle}
-                      onMouseEnter={e => { e.currentTarget.style.color = G.gold; e.currentTarget.style.background = G.goldGhost; }}
-                      onMouseLeave={e => { e.currentTarget.style.color = G.whiteDim; e.currentTarget.style.background = "transparent"; }}
-                    >
-                      <span style={{ color: G.gold }}>{item.icon}</span>
-                      {item.title}
-                    </Link>
+                  <MenubarItem key={item.title}>
+                    {item.action === "logout" ? (
+                      <button
+                        onClick={handleLogout}
+                        style={dropItemStyle}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.color = G.gold;
+                          e.currentTarget.style.background = G.goldGhost;
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.color = G.whiteDim;
+                          e.currentTarget.style.background = "transparent";
+                        }}
+                      >
+                        <span style={{ color: G.gold }}>{item.icon}</span>
+                        {item.title}
+                      </button>
+                    ) : (
+                      <Link
+                        to={item.href}
+                        style={dropItemStyle}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.color = G.gold;
+                          e.currentTarget.style.background = G.goldGhost;
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.color = G.whiteDim;
+                          e.currentTarget.style.background = "transparent";
+                        }}
+                      >
+                        <span style={{ color: G.gold }}>{item.icon}</span>
+                        {item.title}
+                      </Link>
+                    )}
                   </MenubarItem>
                 ))}
               </MenubarContent>
@@ -259,7 +301,7 @@ export default function Header() {
 
           {/* Hamburguesa movil */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          
+
 
             <SheetContent side="left" style={{
               background: "rgba(8,8,7,0.98)", backdropFilter: "blur(20px)",
@@ -272,29 +314,37 @@ export default function Header() {
                 <Link to="/" onClick={() => setMobileOpen(false)} style={{
                   display: "flex", alignItems: "center", gap: 10, textDecoration: "none",
                 }}>
-                  <div style={{ width: 26, height: 26, border: `1px solid ${G.gold}`,
-                    display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{
+                    width: 26, height: 26, border: `1px solid ${G.gold}`,
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
                     <div style={{ width: 8, height: 8, background: G.gold, transform: "rotate(45deg)" }} />
                   </div>
                   <div>
-                    <p style={{ margin: 0, fontFamily: "'Montserrat', sans-serif", fontWeight: 400,
-                      fontSize: 12, letterSpacing: "0.28em", textTransform: "uppercase", color: G.white }}>El Garaje</p>
-                    <p style={{ margin: 0, fontFamily: "'Montserrat', sans-serif", fontWeight: 300,
-                      fontSize: 7, letterSpacing: "0.25em", textTransform: "uppercase", color: G.gold }}>Subastas de Lujo</p>
+                    <p style={{
+                      margin: 0, fontFamily: "'Montserrat', sans-serif", fontWeight: 400,
+                      fontSize: 12, letterSpacing: "0.28em", textTransform: "uppercase", color: G.white
+                    }}>El Garaje</p>
+                    <p style={{
+                      margin: 0, fontFamily: "'Montserrat', sans-serif", fontWeight: 300,
+                      fontSize: 7, letterSpacing: "0.25em", textTransform: "uppercase", color: G.gold
+                    }}>Subastas de Lujo</p>
                   </div>
                 </Link>
 
                 {/* Grupos */}
                 {[
-                  { title: "Subastas",    icon: <Gavel   className="h-3 w-3" />, items: navItems  },
-                  { title: "Administrar", icon: <Layers  className="h-3 w-3" />, items: mantItems },
-                  { title: userEmail,     icon: <User    className="h-3 w-3" />, items: userItems },
+                  { title: "Subastas", icon: <Gavel className="h-3 w-3" />, items: navItems },
+                  { title: "Administrar", icon: <Layers className="h-3 w-3" />, items: mantItems },
+                  { title: userEmail, icon: <User className="h-3 w-3" />, items: userItems },
                 ].map(group => (
                   <div key={group.title}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                       <span style={{ color: G.gold }}>{group.icon}</span>
-                      <p style={{ margin: 0, fontFamily: "'Montserrat', sans-serif", fontWeight: 400,
-                        fontSize: 8, letterSpacing: "0.4em", textTransform: "uppercase", color: G.gold }}>
+                      <p style={{
+                        margin: 0, fontFamily: "'Montserrat', sans-serif", fontWeight: 400,
+                        fontSize: 8, letterSpacing: "0.4em", textTransform: "uppercase", color: G.gold
+                      }}>
                         {group.title}
                       </p>
                     </div>
