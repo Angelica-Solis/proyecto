@@ -18,6 +18,18 @@ class UserService {
   getUserUpdate(usuario) {
     return axios.put(BASE_URL + '/update/' + usuario.id, usuario);
   }
+
+  createUsuario(usuario) {
+    return axios.post(BASE_URL, JSON.stringify(usuario));
+  }
+
+  getRoles() {
+    return axios.get(BASE_URL + '/getRoles/');
+  }
+
+  loginUser(User) {
+    return axios.post(BASE_URL + '/login/', JSON.stringify(User));
+  }
 }
 
 export default new UserService();

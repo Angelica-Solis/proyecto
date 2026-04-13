@@ -1,4 +1,7 @@
 <?php
+
+use Firebase\JWT\JWT;
+
 class UsuarioModel
 {
     public $enlace;
@@ -109,5 +112,100 @@ class UsuarioModel
 
         //Retornar usuario
         return $this->get($usuario->id);
+    }
+
+    // Crear el objeto
+    public function create($usuario)
+    {
+        try {
+
+            // Validaciones
+            if (empty($usuario->nombreUsuario)) {
+                throw new Exception("El nombre es obligatorio");
+            }
+
+            if (empty($usuario->emailUsuario)) {
+                throw new Exception("El correo es obligatorio");
+            }
+
+            if (!filter_var($usuario->emailUsuario, FILTER_VALIDATE_EMAIL)) {
+                throw new Exception("Correo inválido");
+            }
+
+            if (empty($usuario->contrasenna)) {
+                throw new Exception("La contraseña es obligatoria");
+            }
+
+            if (strlen($usuario->contrasenna) < 3) {
+                throw new Exception("La contraseña debe tener al menos 3 caracteres");
+            }
+
+            if (empty($usuario->IdRol)) {
+                throw new Exception("El rol es obligatorio");
+            }
+
+            if (empty($usuario->IdEstado)) {
+                throw new Exception("El estado es obligatorio");
+            }
+
+            // HASH
+            $passwordHash = password_hash($usuario->contrasenna, PASSWORD_DEFAULT);
+
+            // SQL
+            $sql = "INSERT INTO usuario 
+            (nombreUsuario, emailUsuario, contrasenna, IdRol, IdEstado, fecha_registro)
+            VALUES 
+            ('$usuario->nombreUsuario', '$usuario->emailUsuario', '$passwordHash', '$usuario->IdRol', '$usuario->IdEstado', NOW())";
+
+            $idUsuario = $this->enlace->executeSQL_DML_last($sql);
+
+            // Retornar usuario creado
+            return $this->get($idUsuario);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
+
+    // obtener solo roles
+    public function getRoles()
+    {
+        try {
+            $sql = "SELECT id, nombreRol FROM rol ORDER BY nombreRol";
+            return $this->enlace->ExecuteSQL($sql);
+        } catch (Exception $e) {
+            handleException($e);
+        }
+    }
+
+    // LOGIN DEL USUARIO
+    public function login($objeto)
+    {
+        $vSql = "SELECT * from usuario where emailUsuario='$objeto->email'";
+        //Ejecutar la consulta
+        $vResultado = $this->enlace->ExecuteSQL($vSql);
+        if (is_object($vResultado[0])) {
+            $user = $vResultado[0];
+            if (password_verify($objeto->password, $user->contrasenna)) {
+                $usuario = $this->get($user->id);
+                if (!empty($usuario)) {
+                    // Datos para el token JWT
+                    $data = [
+                        'id' => $usuario->id,
+                        'email' => $usuario->emailUsuario,
+                        'rol' => $usuario->nombreRol,
+                        'iat' => time(),  // Hora de emisión
+                        'exp' => time() + 3600 // Expiración en 1 hora
+                    ];
+
+                    // Generar el token JWT
+                    $jwt_token = JWT::encode($data, config::get('SECRET_KEY'), 'HS256');
+
+                    // Enviar el token como respuesta
+                    return $jwt_token;
+                }
+            }
+        } else {
+            return false;
+        }
     }
 }
