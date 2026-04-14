@@ -5,6 +5,7 @@ import { ArrowLeft, Info, Edit, Rocket, XCircle, Plus, Ban, Calendar, Gavel } fr
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import subastaService from "@/services/SubastaService";
 import { toast } from "sonner";
+import { useUser } from "@/hooks/useUser";
 
 export function SubastaTable() {
     const navigate = useNavigate();
@@ -40,6 +41,9 @@ export function SubastaTable() {
             catch (error) { toast.error(error.response?.data?.message || "No se pudo cancelar"); }
         }
     };
+    // Autorizacion
+    const { authorize } = useUser();
+    const canManage = authorize(["Administrador", "Vendedor"]);
 
     const handleDelete = async (id) => {
         if (window.confirm("¿Estás seguro de que deseas cancelar esta subasta? Esta acción no se puede deshacer.")) {
@@ -220,7 +224,7 @@ export function SubastaTable() {
                                 {/* Acciones */}
                                 <div className="flex items-center gap-2 mt-4 pt-3 border-t border-[#C9A84C]/10">
 
-                                    {item.idEstadoSubasta == 4 && (
+                                    {canManage && item.idEstadoSubasta == 4 && (
                                         <>
                                             <ActionBtn
                                                 label="Modificar"
@@ -246,7 +250,7 @@ export function SubastaTable() {
                                         </>
                                     )}
 
-                                    {item.idEstadoSubasta == 1 && item.cantidadPujas == 0 && (
+                                    {canManage && item.idEstadoSubasta == 1 && item.cantidadPujas == 0 && (
                                         <ActionBtn
                                             label="Cancelar"
                                             colorClass="border-red-500/20 text-red-400 hover:border-red-500 hover:bg-red-500/10"

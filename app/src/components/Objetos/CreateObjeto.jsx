@@ -4,7 +4,7 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-
+import { useUser } from "@/hooks/useUser";
 // shadcn/ui
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,10 +35,11 @@ export function CreateObjeto() {
     /*** Estados para preview de imágenes ***/
     const [error, setError] = useState("");
     const [fileURL, setFileURL] = useState(null);
-    const usuarioActual = 1; //idvendedor 
+    const { user } = useUser();
     const [vendedor, setVendedor] = useState({ id: 0, nombre: "" });
     const [categoriasOpciones, setCategoriasOpciones] = useState([]);
     const [condicionOpciones, setCondicionOpciones] = useState([]);
+    const usuarioActual = user?.id;
 
     /*** Esquema de validación Yup ***/
     const objetoSchema = yup.object({
@@ -141,15 +142,19 @@ export function CreateObjeto() {
 
     // Cargar info del vendedor
     useEffect(() => {
+        if (!usuarioActual) return;
+
         const fetchVendedor = async () => {
             try {
                 const res = await userService.getUserById(usuarioActual);
                 setVendedor(res.data.data);
-                setValue("idVendedor", parseInt(res.data.data.id)); // Esto se envía al backend
+
+                setValue("idVendedor", parseInt(res.data.data.id));
             } catch (err) {
                 console.error("Error al cargar vendedor:", err);
             }
         };
+
         fetchVendedor();
     }, [usuarioActual, setValue]);
 
@@ -176,7 +181,7 @@ export function CreateObjeto() {
                 const formData = new FormData();
                 formData.append("file", imagen);
                 formData.append("objeto_id", objetoId);
-///////////////////////////
+                ///////////////////////////
                 const resImg = await ImageService.createImage(formData);
                 console.log("RESPUESTA IMAGEN:", resImg);
 

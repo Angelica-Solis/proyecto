@@ -9,11 +9,8 @@ class PujaService {
         return axios.get(`${BASE_URL}/historial/${idSubasta}`);
     }
 
-    createPuja(data, usuarioId) {
-        return axios.post(BASE_PUJA, {
-            ...data,
-            idUsuario: usuarioId
-        });
+    createPuja(data) {
+        return axios.post(BASE_PUJA, data);
     }
     obtenerCompradores() {
         return axios.get(BASE_URL + '/obtenerCompradores/');

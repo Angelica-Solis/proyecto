@@ -39,8 +39,17 @@ export default function UserProvider({ children }) {
     // Verifica si el rol del usuario autenticado está incluido dentro de los roles permitidos.
     const authorize = useCallback(
         (requiredRoles = []) => {
-            if (!user || !user.rol) return false;
-            return requiredRoles.includes(user.rol);
+            if (!user) return false;
+
+            const normalize = (r) =>
+                String(r || "")
+                    .replace("ROLE_", "")
+                    .trim()
+                    .toLowerCase();
+
+            const userRole = normalize(user.rol || user.role);
+
+            return requiredRoles.some(r => normalize(r) === userRole);
         },
         [user]
     );

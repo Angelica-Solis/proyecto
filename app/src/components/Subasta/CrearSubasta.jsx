@@ -7,17 +7,19 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft, Save } from "lucide-react";
+import { useUser } from "@/hooks/useUser";
 // Servicios
 import subastaService from "@/services/SubastaService";
 import ObjetoService from "@/services/ObjetoService";
+import userService from "@/services/UserService";
 
 export function CrearSubasta() {
   const navigate = useNavigate();
   const [objetos, setObjetos] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  // Variable lógica simulada (Nombre del vendedor fijo en la UI)
-  const vendedorNombre = "Usuario Vendedor Demo"; 
+  //Usuario 
+  const { user } = useUser();
+  const [usuarioCompleto, setUsuarioCompleto] = useState(null);
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
@@ -30,55 +32,77 @@ export function CrearSubasta() {
 
   useEffect(() => {
     // Cargar objetos activos para el selector
-    ObjetoService.getActivos() 
+    ObjetoService.getActivos()
       .then(res => setObjetos(res.data.data))
       .catch(() => toast.error("Error al cargar tus objetos"));
   }, []);
 
+  //Info vendedor actual
+  useEffect(() => {
+  if (user?.id) {
+    userService.getUserById(user.id)
+      .then(res => {
+        console.log("USUARIO COMPLETO:", res.data.data);
+        setUsuarioCompleto(res.data.data);
+      })
+      .catch(() => {
+        toast.error("Error cargando usuario");
+      });
+  }
+}, [user]);
+
   const onSubmit = async (data) => {
-  // 1. Validación preventiva en el cliente
-  if (new Date(data.fechaCierre) <= new Date(data.fechaInicio)) {
-    toast.error("La fecha de cierre debe ser posterior a la de inicio");
-    return;
-  }
+    // 1. Validación preventiva en el cliente
+    if (new Date(data.fechaCierre) <= new Date(data.fechaInicio)) {
+      toast.error("La fecha de cierre debe ser posterior a la de inicio");
+      return;
+    }
 
-  const datosFormateados = {
-    ...data,
-    idObjeto: parseInt(data.idObjeto),
-    idEstadoSubasta: parseInt(data.idEstadoSubasta || 4),
-    precioBase: parseFloat(data.precioBase),
-    incremento: parseFloat(data.incremento)
+    const datosFormateados = {
+      ...data,
+      idVendedor: user?.id,
+      idObjeto: parseInt(data.idObjeto),
+      idEstadoSubasta: parseInt(data.idEstadoSubasta || 4),
+      precioBase: parseFloat(data.precioBase),
+      incremento: parseFloat(data.incremento)
+    };
+console.log("USER LOGUEADO:", user);
+console.log("ID QUE ENVÍAS:", user?.id);
+
+console.log("DATA FINAL:", datosFormateados);
+    setLoading(true);
+    try {
+      const response = await subastaService.create(datosFormateados);
+
+      //todo salió bien
+      toast.success("Subasta guardada como borrador");
+
+      // pequeño delay para que el usuario lea el éxito antes de irse
+      setTimeout(() => navigate("/subastas"), 1500);
+
+    } catch (error) {
+      // 3. CAPTURA DETALLADA DEL ERROR
+      // Intentamos obtener el mensaje del JSON del servidor, si no, el mensaje de Axios
+      const errorServer = error.response?.data?.message;
+      const errorGenerico = "Error de conexión con el servidor";
+
+      const mensajeAMostrar = errorServer || error.message || errorGenerico;
+
+      // Mostramos el error exacto en Sonner
+      toast.error(mensajeAMostrar, {
+        description: "Por favor, revisa los datos ingresados.",
+        duration: 5000, // Más tiempo para que el usuario lo lea
+      });
+
+      console.error("Detalle técnico del fallo:", error.response?.data);
+      if (!user) {
+        toast.error("Debe iniciar sesión");
+        return;
+      }
+    } finally {
+      setLoading(false);
+    }
   };
-
-  setLoading(true);
-  try {
-    const response = await subastaService.create(datosFormateados);
-    
-    //todo salió bien
-    toast.success("Subasta guardada como borrador");
-    
-    // pequeño delay para que el usuario lea el éxito antes de irse
-    setTimeout(() => navigate("/subastas"), 1500);
-
-  } catch (error) {
-    // 3. CAPTURA DETALLADA DEL ERROR
-    // Intentamos obtener el mensaje del JSON del servidor, si no, el mensaje de Axios
-    const errorServer = error.response?.data?.message;
-    const errorGenerico = "Error de conexión con el servidor";
-    
-    const mensajeAMostrar = errorServer || error.message || errorGenerico;
-
-    // Mostramos el error exacto en Sonner
-    toast.error(mensajeAMostrar, {
-      description: "Por favor, revisa los datos ingresados.",
-      duration: 5000, // Más tiempo para que el usuario lo lea
-    });
-
-    console.error("Detalle técnico del fallo:", error.response?.data);
-  } finally {
-    setLoading(false);
-  }
-};
 
   return (
     <div className="container mx-auto px-6 py-10 max-w-3xl">
@@ -88,30 +112,30 @@ export function CrearSubasta() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-        <h1 className="text-4xl font-light tracking-tight leading-none">
+          <h1 className="text-4xl font-light tracking-tight leading-none">
             Nueva{" "}
             <em className="text-[#C9A84C] not-italic font-light">
-            Subasta
+              Subasta
             </em>
-        </h1>
+          </h1>
         </div>
         <div className="flex items-center gap-3 mb-3">
-            <div className="w-7 h-px bg-[#C9A84C]" />
-            <span className="text-[#C9A84C] uppercase tracking-[0.4em] text-[12px] font-medium">
+          <div className="w-7 h-px bg-[#C9A84C]" />
+          <span className="text-[#C9A84C] uppercase tracking-[0.4em] text-[12px] font-medium">
             Registro de Borrador
-            </span>
+          </span>
         </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-[#0F0F0F]/40 p-8 border border-[#F5F0E8]/10 rounded-sm backdrop-blur-sm">
-        
+
         {/* Fila 1: Vendedor (Solo lectura) y Objeto */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label className="text-[#F5F0E8]/60 text-[10px] uppercase tracking-widest">Usuario Vendedor</Label>
-            <Input 
-              value={vendedorNombre} 
-              disabled 
+            <Input
+              value={usuarioCompleto?.nombreUsuario || ""}
+              disabled
               className="bg-[#F5F0E8]/5 border-[#F5F0E8]/10 text-[#C9A84C] font-semibold cursor-not-allowed"
             />
           </div>
@@ -136,16 +160,16 @@ export function CrearSubasta() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label className="text-[#F5F0E8]/60 text-[10px] uppercase tracking-widest">Fecha y Hora Inicio</Label>
-            <Input 
-              type="datetime-local" 
+            <Input
+              type="datetime-local"
               {...register("fechaInicio", { required: true })}
               className="bg-transparent border-[#F5F0E8]/20 text-[#F5F0E8]"
             />
           </div>
           <div className="space-y-2">
             <Label className="text-[#F5F0E8]/60 text-[10px] uppercase tracking-widest">Fecha y Hora Cierre</Label>
-            <Input 
-              type="datetime-local" 
+            <Input
+              type="datetime-local"
               {...register("fechaCierre", { required: true })}
               className="bg-transparent border-[#F5F0E8]/20 text-[#F5F0E8]"
             />
@@ -156,8 +180,8 @@ export function CrearSubasta() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label className="text-[#F5F0E8]/60 text-[10px] uppercase tracking-widest">Precio Base (₡)</Label>
-            <Input 
-              type="number" 
+            <Input
+              type="number"
               {...register("precioBase", { required: true, min: 1 })}
               className="bg-transparent border-[#F5F0E8]/20 text-[#F5F0E8]"
             />
@@ -165,8 +189,8 @@ export function CrearSubasta() {
           </div>
           <div className="space-y-2">
             <Label className="text-[#F5F0E8]/60 text-[10px] uppercase tracking-widest">Incremento Mínimo (₡)</Label>
-            <Input 
-              type="number" 
+            <Input
+              type="number"
               {...register("incremento", { required: true, min: 1 })}
               className="bg-transparent border-[#F5F0E8]/20 text-[#F5F0E8]"
             />
@@ -176,16 +200,16 @@ export function CrearSubasta() {
 
         {/* Botones */}
         <div className="pt-6 flex justify-end gap-4">
-          <Button 
-            type="button" 
-            variant="ghost" 
+          <Button
+            type="button"
+            variant="ghost"
             onClick={() => navigate(-1)}
             className="text-[#F5F0E8]/40 hover:text-[#F5F0E8]"
           >
             CANCELAR
           </Button>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={loading}
             className="bg-[#C9A84C] hover:bg-[#A68A3D] text-black font-bold px-10"
           >

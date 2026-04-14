@@ -7,38 +7,35 @@ import { Link, useNavigate } from "react-router-dom";
 import objetooService from "@/services/ObjetoService";
 import { ArrowLeft, Info, Trash2, Edit, Plus, Eye, EyeOff, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { useUser } from "@/hooks/useUser";
 
 export function ObjetoTable() {
     const navigate = useNavigate();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [verEliminados, setVerEliminados] = useState(false); // Filtro lógico
+    const [verEliminados, setVerEliminados] = useState(false);
 
-const cargarObjetos = () => {
-    setLoading(true);
-    
-    const peticion = verEliminados 
-        ? objetooService.getEliminados() 
-        : objetooService.getListadoObjeto();
+    const { authorize } = useUser();
+    const canManage = authorize(["Administrador", "Vendedor"]);
 
-    peticion
-        .then((response) => {
-            console.log("Datos recibidos:", response.data.data);
-            console.log("¿Tiene imagenPrincipal?", response.data.data[0]?.imagenPrincipal);
-            console.log("¿Tiene condicion?", response.data.data[0]?.condicion);
-            console.log("¿Tiene duenno?", response.data.data[0]?.duenno);
-            setData(response.data.data);
-            setLoading(false);
-        })
-        .catch((error) => {
-            console.error("Error:", error);
-            setLoading(false);
-        });
-};
+    const cargarObjetos = () => {
+        setLoading(true);
 
-useEffect(() => {
-    cargarObjetos();
-}, [verEliminados]);
+        const peticion = verEliminados
+            ? objetooService.getEliminados()
+            : objetooService.getListadoObjeto();
+
+        peticion
+            .then((response) => {
+                setData(response.data.data);
+                setLoading(false);
+            })
+            .catch(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        cargarObjetos();
+    }, [verEliminados]);
 
     const handleDelete = async (id) => {
         if (window.confirm("¿Deseas mover este objeto a la papelera?")) {
@@ -47,8 +44,7 @@ useEffect(() => {
                 toast.success("Objeto eliminado lógicamente");
                 cargarObjetos();
             } catch (error) {
-                const msg = error.response?.data?.message || "Error al eliminar";
-                toast.error(msg);
+                toast.error("Error al eliminar");
             }
         }
     };
@@ -57,17 +53,17 @@ useEffect(() => {
         try {
             await objetooService.restore(id);
             toast.success("Objeto restaurado");
-            setVerEliminados(false); // Volver a la vista de activos después de restaurar
+            setVerEliminados(false);
             cargarObjetos();
-        } catch (error) {
-            toast.error("No se pudo restaurar el objeto");
+        } catch {
+            toast.error("No se pudo restaurar");
         }
     };
 
-    // Lógica de filtrado: ID 4 es "Eliminado"
-    const objetosFiltrados = data.filter(obj => 
+    const objetosFiltrados = data.filter(obj =>
         verEliminados ? obj.idEstadoObjeto === '4' : obj.idEstadoObjeto !== '4'
     );
+
 
     return (
         <div className="min-h-screen bg-[#080807] text-[#F5F0E8] p-10 font-sans">
@@ -90,39 +86,41 @@ useEffect(() => {
                         </h1>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        {/* Botón para alternar entre Activos y Papelera (Estética similar al Plus) */}
-                        <div className="group relative">
-                            <Button
-                                onClick={() => setVerEliminados(!verEliminados)}
-                                className={`w-10 h-10 p-0 rounded-none border transition-all duration-300 ${
-                                    verEliminados 
-                                    ? "border-blue-400/40 bg-blue-400/10 text-blue-400 hover:bg-blue-400/20" 
-                                    : "border-[#F5F0E8]/20 bg-transparent text-[#F5F0E8]/50 hover:border-[#F5F0E8] hover:text-[#F5F0E8]"
-                                }`}
-                            >
-                                {verEliminados ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-                            </Button>
-                            <span className="absolute top-12 right-0 px-3 py-1.5 bg-[#C9A84C] text-[#080807] text-[10px] font-medium tracking-[0.2em] uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                                {verEliminados ? "Ver Activos" : "Ver Papelera"}
-                            </span>
-                        </div>
+                    {canManage && (
+                        <div className="flex items-center gap-4">
 
-                        {/* Boton agregar (Solo visible en activos) */}
-                        {!verEliminados && (
-                            <div className="group relative">
+                            {/* Toggle papelera */}
+                            <div className="relative group/btn">
                                 <Button
-                                    onClick={() => navigate('/objeto/create')}
-                                    className="w-10 h-10 p-0 rounded-none border border-[#C9A84C]/40 bg-[#C9A84C]/10 text-[#C9A84C] hover:border-[#C9A84C] hover:bg-[#C9A84C]/20 hover:shadow-[0_0_12px_rgba(201,168,76,0.3)] transition-all duration-300"
+                                    onClick={() => setVerEliminados(!verEliminados)}
+                                    className={`w-10 h-10 p-0 rounded border transition-all duration-300 ${verEliminados
+                                        ? "border-blue-400/40 bg-blue-400/10 text-blue-400 hover:bg-blue-400/20"
+                                        : "border-[#F5F0E8]/20 bg-transparent text-[#F5F0E8]/50 hover:border-[#F5F0E8] hover:text-[#F5F0E8]"
+                                        }`}
                                 >
-                                    <Plus className="h-5 w-5" />
+                                    {verEliminados ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                                 </Button>
-                                <span className="absolute top-12 right-0 px-3 py-1.5 bg-[#C9A84C] text-[#080807] text-[10px] font-medium tracking-[0.2em] uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                                    Agregar Objeto
+                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 bg-[#1a1a16] text-[#F5F0E8] text-[10px] whitespace-nowrap border border-[#C9A84C]/20 rounded opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none z-10 tracking-wide">
+                                    {verEliminados ? "Ver activos" : "Ver papelera"}
                                 </span>
                             </div>
-                        )}
-                    </div>
+
+                            {/* Crear */}
+                            {!verEliminados && (
+                                <div className="relative group/btn">
+                                    <Button
+                                        onClick={() => navigate('/objeto/create')}
+                                        className="w-10 h-10 p-0 rounded border border-[#C9A84C]/40 bg-[#C9A84C]/10 text-[#C9A84C] hover:border-[#C9A84C] hover:bg-[#C9A84C]/20 hover:shadow-[0_0_12px_rgba(201,168,76,0.3)] transition-all duration-300"
+                                    >
+                                        <Plus className="h-5 w-5" />
+                                    </Button>
+                                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 bg-[#1a1a16] text-[#F5F0E8] text-[10px] whitespace-nowrap border border-[#C9A84C]/20 rounded opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none z-10 tracking-wide">
+                                        Crear nuevo
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -130,127 +128,121 @@ useEffect(() => {
             <div className="border border-[#C9A84C]/20 bg-[#0E0D0B] overflow-hidden">
                 <Table>
                     <TableHeader>
-                        <TableRow className="border-b border-[#C9A84C]/20 bg-[#C9A84C]/5 hover:bg-[#C9A84C]/5">
+                        <TableRow className="border-b border-[#C9A84C]/20 bg-[#C9A84C]/5">
                             {["Nombre", "Imagen", "Condición", "Dueño", "Acciones"].map((h, i) => (
                                 <TableHead
                                     key={i}
-                                    className={`text-[#C9A84C] text-[11px] font-medium tracking-[0.35em] uppercase py-4 border-b border-[#C9A84C]/20 ${i === 4 ? "text-right pr-4" : ""}`}
+                                    className={`text-[#C9A84C] text-[11px] tracking-[0.35em] uppercase ${i === 4 ? "text-right pr-4" : ""}`}
                                 >
                                     {h}
                                 </TableHead>
                             ))}
                         </TableRow>
                     </TableHeader>
+
                     <TableBody>
                         {loading ? (
-                            <TableRow className="hover:bg-transparent border-0">
-                                <TableCell colSpan={5} className="py-16 text-center">
-                                    <div className="flex flex-col items-center gap-3">
-                                        <div className="w-7 h-7 rounded-full border-2 border-[#C9A84C]/20 border-t-[#C9A84C] animate-spin" />
-                                        <span className="text-[12px] tracking-[0.35em] uppercase text-[#F5F0E8]/40">
-                                            Cargando información...
-                                        </span>
-                                    </div>
+                            <TableRow>
+                                <TableCell colSpan={5} className="text-center py-10">
+                                    Cargando...
                                 </TableCell>
                             </TableRow>
-                        ) : objetosFiltrados.length > 0 ? (
-                            objetosFiltrados.map((objetoo, index) => (
-                                <TableRow
-                                    key={index}
-                                    className={`border-b border-[#C9A84C]/[0.07] transition-colors duration-200 hover:bg-[#C9A84C]/[0.06] ${index % 2 !== 0 ? "bg-[#F5F0E8]/[0.03]" : "bg-transparent"}`}
-                                >
-                                    <TableCell className="py-3">
-                                        <span className="text-base font-light italic text-[#F5F0E8]">
-                                            {objetoo.nombreObjeto}
-                                        </span>
-                                    </TableCell>
+                        ) : objetosFiltrados.map((objetoo, index) => {
+                            console.log("OBJETO:", objetoo);
 
-                                    <TableCell className="py-3">
+                            return (
+                                <TableRow key={index} className="border-b border-[#C9A84C]/[0.07]">
+
+                                    <TableCell>{objetoo.nombreObjeto}</TableCell>
+
+                                    <TableCell>
                                         <img
-                                            src={`http://127.0.0.1:81/proyecto/api/uploads/${objetoo.imagen}`}
-                                            alt={objetoo.imagen}
+                                            src={`http://127.0.0.1:81/proyecto/api/uploads/${objetoo.imagenPrincipal}`}
                                             className="w-16 h-16 object-cover border border-[#C9A84C]/25"
                                         />
                                     </TableCell>
 
-                                    <TableCell className="py-3">
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 border border-[#C9A84C]/25 bg-[#C9A84C]/[0.07] text-[#C9A84C] text-[11px] font-medium tracking-[0.3em] uppercase">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-[#C9A84C]" />
-                                            {objetoo.condicion}
-                                        </span>
-                                    </TableCell>
+                                    <TableCell>{objetoo.condicion}</TableCell>
+                                    <TableCell>{objetoo.duenno}</TableCell>
 
-                                    <TableCell className="py-3">
-                                        <span className="text-[13px] font-light tracking-wide text-[#F5F0E8]/50">
-                                            {objetoo.duenno}
-                                        </span>
-                                    </TableCell>
+                                    <TableCell className="pr-4">
+                                        <div className="flex justify-end gap-2">
 
-                                    <TableCell className="py-3 pr-4">
-                                        <div className="flex items-center justify-end gap-2">
-                                            {verEliminados ? (
-                                                <div className="group relative">
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        onClick={() => handleRestore(objetoo.id)}
-                                                        className="w-8 h-8 p-0 rounded-none border border-green-500/20 text-green-500/70 hover:border-green-500 hover:text-green-500 hover:bg-green-500/10 transition-all duration-300"
-                                                    >
-                                                        <RotateCcw className="h-4 w-4" />
-                                                    </Button>
+                                            {/* DETALLE */}
+                                            <div className="relative group/btn">
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    asChild
+                                                    className="bg-blue-500/10 text-blue-400 hover:bg-blue-500/25 rounded"
+                                                >
+                                                    <Link to={`/objeto/detalle/${objetoo.id}`}>
+                                                        <Info className="h-4 w-4" />
+                                                    </Link>
+                                                </Button>
+                                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 bg-[#1a1a16] text-[#F5F0E8] text-[10px] whitespace-nowrap border border-[#C9A84C]/20 rounded opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none z-10 tracking-wide">
+                                                    Ver detalle
+                                                </span>
+                                            </div>
 
-                                                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 text-[10px] 
-                                                        bg-green-500 text-white opacity-0 group-hover:opacity-100 
-                                                        transition whitespace-nowrap">
-                                                        Restaurar
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        asChild
-                                                        className="w-8 h-8 p-0 rounded-none border border-[#C9A84C]/20 text-[#F5F0E8]/50 hover:border-[#C9A84C] hover:text-[#C9A84C] hover:bg-[#C9A84C]/[0.07] transition-all duration-300"
-                                                    >
-                                                        <Link to={`/objeto/detalle/${objetoo.id}`}>
-                                                            <Info className="h-4 w-4" />
-                                                        </Link>
-                                                    </Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        onClick={() => navigate(`/objeto/update/${objetoo.id}`)}
-                                                        className="w-8 h-8 p-0 rounded-none border border-[#4A9EFF]/20 text-[#4A9EFF]/70 hover:border-[#4A9EFF] hover:text-[#4A9EFF] hover:bg-[#4A9EFF]/[0.1] transition-all duration-300"
-                                                    >
-                                                        <Edit className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        onClick={() => handleDelete(objetoo.id)}
-                                                        className="w-8 h-8 p-0 rounded-none border border-[#FF4A4A]/20 text-[#FF4A4A]/70 hover:border-[#FF4A4A] hover:text-[#FF4A4A] hover:bg-[#FF4A4A]/[0.1] transition-all duration-300"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </>
+                                            {/* SOLO ADMIN/VENDEDOR */}
+                                            {canManage && (
+                                                verEliminados ? (
+                                                    /* RESTAURAR */
+                                                    <div className="relative group/btn">
+                                                        <Button
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            onClick={() => handleRestore(objetoo.id)}
+                                                            className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/25 rounded"
+                                                        >
+                                                            <RotateCcw className="h-4 w-4" />
+                                                        </Button>
+                                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 bg-[#1a1a16] text-[#F5F0E8] text-[10px] whitespace-nowrap border border-[#C9A84C]/20 rounded opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none z-10 tracking-wide">
+                                                            Restaurar
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        {/* EDITAR */}
+                                                        <div className="relative group/btn">
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                onClick={() => navigate(`/objeto/update/${objetoo.id}`)}
+                                                                className="bg-[#C9A84C]/10 text-[#C9A84C] hover:bg-[#C9A84C]/25 rounded"
+                                                            >
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 bg-[#1a1a16] text-[#F5F0E8] text-[10px] whitespace-nowrap border border-[#C9A84C]/20 rounded opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none z-10 tracking-wide">
+                                                                Editar
+                                                            </span>
+                                                        </div>
+
+                                                        {/* ELIMINAR */}
+                                                        <div className="relative group/btn">
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                onClick={() => handleDelete(objetoo.id)}
+                                                                className="bg-red-500/10 text-red-400 hover:bg-red-500/25 rounded"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 bg-[#1a1a16] text-[#F5F0E8] text-[10px] whitespace-nowrap border border-[#C9A84C]/20 rounded opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none z-10 tracking-wide">
+                                                                Eliminar
+                                                            </span>
+                                                        </div>
+                                                    </>
+                                                )
                                             )}
+
                                         </div>
                                     </TableCell>
+
                                 </TableRow>
-                            ))
-                        ) : (
-                            <TableRow className="hover:bg-transparent border-0">
-                                <TableCell colSpan={5} className="py-16 text-center">
-                                    <div className="flex flex-col items-center gap-3">
-                                        <div className="w-2 h-2 border border-[#C9A84C]/50 rotate-45" />
-                                        <span className="text-[12px] tracking-[0.35em] uppercase text-[#F5F0E8]/40">
-                                            {verEliminados ? "Papelera vacía" : "No hay objetos disponibles"}
-                                        </span>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        )}
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </div>
@@ -259,12 +251,13 @@ useEffect(() => {
             <div className="mt-8 flex">
                 <button
                     onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 border border-[#F5F0E8]/30 bg-[#F5F0E8]/[0.06] text-[#F5F0E8] hover:border-[#C9A84C] hover:text-[#C9A84C] hover:bg-[#C9A84C]/[0.07] transition-all duration-300 text-[9px] tracking-[0.3em] uppercase font-medium px-5 h-9"
+                    className="flex items-center gap-2 border border-[#F5F0E8]/30 bg-[#F5F0E8]/[0.06] text-[#F5F0E8] hover:border-[#C9A84C] hover:text-[#C9A84C] transition-all text-[9px] tracking-[0.3em] uppercase px-5 h-9"
                 >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     Regresar
                 </button>
             </div>
+
         </div>
     );
 }

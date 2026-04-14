@@ -89,10 +89,6 @@ class subasta
             $response = new Response();
             $json = file_get_contents('php://input');
             $objeto = json_decode($json);
-
-            // VARIABLE LÓGICA SIMULADA: Asignamos el vendedor directamente
-            $objeto->idVendedor = 1;
-
             $subastaM = new SubastaModel();
             $result = $subastaM->create($objeto);
             $response->toJSON($result);
@@ -166,28 +162,37 @@ class subasta
             $inputJSON = $request->getJSON();
             $subastaM = new SubastaModel();
 
-            //1. Verificar cierre ANTES de permitir la puja
+            // Validar datos básicos
+            if (empty($inputJSON->idSubasta) || empty($inputJSON->monto) || empty($inputJSON->idUsuario)) {
+                throw new Exception("Datos incompletos para realizar la puja");
+            }
+
+            $usuarioActual = $inputJSON->idUsuario;
+
+            // 1. Verificar cierre ANTES de permitir la puja
             if ($subastaM->verificarYCerrar($inputJSON->idSubasta)) {
                 $pusher = $this->getPusher();
-                $pusher->trigger("subasta", "subasta-finalizada", ["idSubasta" => $inputJSON->idSubasta]);
+                $pusher->trigger("subasta", "subasta-finalizada", [
+                    "idSubasta" => $inputJSON->idSubasta
+                ]);
+
                 throw new Exception("La subasta ha finalizado y ya no acepta pujas.");
             }
 
-            // default 1
-            $usuarioActual = $inputJSON->idUsuario ?? 1;
-
-
-            // obtener líder anterior
+            // 2. Obtener líder anterior
             $subastaAntes = $subastaM->get($inputJSON->idSubasta);
+
             $liderAnterior = (!empty($subastaAntes->historialPujas))
                 ? $subastaAntes->historialPujas[0]->idUsuario
                 : null;
 
+            // 3. Crear puja
             $pujaModel = new PujaModel();
-            $result = $pujaModel->create($inputJSON, $usuarioActual); // pasar usuarioActual
+            $result = $pujaModel->create($inputJSON, $usuarioActual);
 
-            // Pusher
+            // 4. Notificar con Pusher
             $pusher = $this->getPusher();
+
             $data = [
                 "idSubasta" => $inputJSON->idSubasta,
                 "monto" => $result["monto"],
@@ -195,8 +200,10 @@ class subasta
                 "liderAnterior" => $liderAnterior,
                 "usuarioActual" => $usuarioActual
             ];
+
             $pusher->trigger("subasta", "nueva-puja", $data);
 
+            // 5. Respuesta
             $response->toJSON($result);
         } catch (Exception $e) {
             handleException($e);
@@ -205,7 +212,7 @@ class subasta
     //Obtener unicamente pujadores
     public function obtenerCompradores()
     {
-        try {       
+        try {
             $response = new Response();
             $pujaM = new PujaModel();
             $result = $pujaM->obtenerCompradores();

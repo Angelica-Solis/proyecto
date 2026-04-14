@@ -184,7 +184,7 @@ function ParallaxDivider() {
         }}>
           Nuestros especialistas evalúan tu vehículo y lo posicionan ante los mejores compradores del mundo.
         </p>
-        <a href="/consignar" style={{
+        <a href="mantenimiento/subastas/crear" style={{
           alignSelf: "flex-start",
           fontFamily: "'Montserrat', sans-serif", fontWeight: 400,
           fontSize: 9, letterSpacing: "0.35em", textTransform: "uppercase",
@@ -334,7 +334,7 @@ export function Home() {
                 onMouseEnter={e => { e.target.style.background = G.goldLight; e.target.style.transform = "translateY(-2px)"; e.target.style.boxShadow = `0 12px 40px rgba(201,168,76,0.3)`; }}
                 onMouseLeave={e => { e.target.style.background = G.gold; e.target.style.transform = "translateY(0)"; e.target.style.boxShadow = "none"; }}
               >Explorar Lotes</a>
-              <a href="/registro" style={{
+              <a href="user/create" style={{
                 padding: "15px 48px", background: "transparent",
                 border: `1px solid rgba(245,240,232,0.22)`,
                 color: G.white, fontFamily: "'Montserrat', sans-serif",
@@ -445,7 +445,7 @@ export function Home() {
           }}>
             Accede al catálogo completo y participa en subastas en tiempo real
           </p>
-          <a href="/registro" style={{
+          <a href="user/create" style={{
             display: "inline-block", padding: "16px 60px",
             background: G.gold, color: G.dark,
             fontFamily: "'Montserrat', sans-serif", fontWeight: 500,

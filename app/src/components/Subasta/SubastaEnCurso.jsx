@@ -6,7 +6,7 @@ import pagoService from "@/services/PagoService";
 import pujaService from "@/services/PujaService";
 import { toast } from "sonner";
 import Pusher from "pusher-js";
-import { useRef } from "react";
+import { useUser } from "@/hooks/useUser";
 
 const fmt = (n) =>
     new Intl.NumberFormat("es-CR", { style: "currency", currency: "CRC", maximumFractionDigits: 0 }).format(n);
@@ -84,53 +84,11 @@ export function SubastaEnCurso() {
     const [loading, setLoading] = useState(true);
     const [monto, setMonto] = useState("");
     const [loadingPuja, setLoadingPuja] = useState(false);
-    const [usuarioActual, setUsuarioActual] = useState(5);
-    const [compradores, setCompradores] = useState([]);
-    const [indexUsuario, setIndexUsuario] = useState(0);
-    const usuarioActualRef = useRef(usuarioActual);
     const [pago, setPago] = useState(null);
     const [cerrada, setCerrada] = useState(false);
+    const { user } = useUser();
 
 
-    // cada vez que cambie usuarioActual, se actualiza la ref
-    useEffect(() => {
-        usuarioActualRef.current = usuarioActual;
-    }, [usuarioActual]);
-
-    useEffect(() => {
-        const cargar = async () => {
-            try {
-                const response = await subastaService.getDetalle(id);
-                setSubasta(response.data.data);
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        cargar();
-    }, [id]);
-
-    //CARGAR COMPRADORES
-    useEffect(() => {
-        const cargarCompradores = async () => {
-            try {
-                const res = await pujaService.obtenerCompradores();
-                const lista = res.data.data;
-
-                setCompradores(lista);
-
-                if (lista.length > 0) {
-                    setUsuarioActual(lista[0].id);
-                }
-
-            } catch (error) {
-                console.error(error);
-            }
-        };
-
-        cargarCompradores();
-    }, []);
 
     //PUSHER
     useEffect(() => {
@@ -148,8 +106,7 @@ export function SubastaEnCurso() {
                 const nuevaSubasta = response.data.data;
                 setSubasta(nuevaSubasta);
 
-                // Usamos la ref en vez del estado
-                const usuarioActualValue = usuarioActualRef.current;
+                const usuarioActualValue = user.id;
 
                 console.log("liderAnterior:", liderAnterior);
                 console.log("nuevoLider:", nuevoLider);
@@ -173,17 +130,31 @@ export function SubastaEnCurso() {
             channel.unsubscribe();
         };
     }, [id]);
+//cargar
+    useEffect(() => {
+        const cargar = async () => {
+            try {
+                const response = await subastaService.getDetalle(id);
+                setSubasta(response.data.data);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        cargar();
+    }, [id]);
     // enviar puja 
     const handleRealizarPuja = async () => {
         try {
             setLoadingPuja(true);
 
-            const res = await pujaService.createPuja(
-                { idSubasta: id, monto: parseFloat(monto) },
-                usuarioActual
-            );
+            const res = await pujaService.createPuja({
+                idSubasta: id,
+                monto: parseFloat(monto),
+                idUsuario: user.id
+            });
 
-            // actualizar subasta
             const response = await subastaService.getDetalle(id);
             setSubasta(response.data.data);
             setMonto("");
@@ -197,88 +168,78 @@ export function SubastaEnCurso() {
     };
     const [tiempoRestante, setTiempoRestante] = useState(0);
     useEffect(() => {
-    if (!subasta?.fechaCierre) return;
+        if (!subasta?.fechaCierre) return;
 
-    const cerrarSubastaFrontend = async () => {
-    try {
-        const response = await subastaService.getDetalle(id);
-        setSubasta(response.data.data);
+        const cerrarSubastaFrontend = async () => {
+            try {
+                const response = await subastaService.getDetalle(id);
+                setSubasta(response.data.data);
 
-    } catch (error) {
-        console.error(error);
-    }
-};
+            } catch (error) {
+                console.error(error);
+            }
+        };
 
-    const interval = setInterval(() => {
-        const ahora = new Date().getTime();
-        const cierre = new Date(subasta.fechaCierre).getTime();
+        const interval = setInterval(() => {
+            const ahora = new Date().getTime();
+            const cierre = new Date(subasta.fechaCierre).getTime();
 
-        const diferencia = cierre - ahora;
+            const diferencia = cierre - ahora;
 
-        if (diferencia <= 0 && !cerrada) {
-        setCerrada(true);
-        cerrarSubastaFrontend();
-        setTiempoRestante(0);
-        clearInterval(interval);
-    } else {
-            setTiempoRestante(diferencia);
+            if (diferencia <= 0 && !cerrada) {
+                setCerrada(true);
+                cerrarSubastaFrontend();
+                setTiempoRestante(0);
+                clearInterval(interval);
+            } else {
+                setTiempoRestante(diferencia);
             }
 
-    }, 1000);
+        }, 1000);
 
-    return () => clearInterval(interval);
-}, [subasta]);
+        return () => clearInterval(interval);
+    }, [subasta]);
 
-useEffect(() => {
-    const cargarPago = async () => {
-        try {
-            if (subasta && (subasta.idEstadoSubasta !== '1')) {
-                const res = await pagoService.getPagoBySubasta(id);
-                setPago(res.data.data);
+    useEffect(() => {
+        const cargarPago = async () => {
+            try {
+                if (subasta && (subasta.idEstadoSubasta !== '1')) {
+                    const res = await pagoService.getPagoBySubasta(id);
+                    setPago(res.data.data);
+                }
+            } catch (error) {
+                console.error(error);
             }
-        } catch (error) {
-            console.error(error);
-        }
+        };
+
+        cargarPago();
+    }, [subasta, id]);
+
+    const formatearTiempo = (ms) => {
+        const totalSegundos = Math.floor(ms / 1000); // Convertir milisegundos a segundos
+        const minutos = Math.floor(totalSegundos / 60); // Calcular los minutos
+        const segundos = totalSegundos % 60; // Calcular los segundos restantes
+
+        // Retornar el tiempo en formato "minutos:segundos", asegurando que los segundos tengan dos dígitos
+        return `${minutos} min ${segundos.toString().padStart(2, "0")} seg`;
     };
 
-    cargarPago();
-}, [subasta, id]);
-
-const formatearTiempo = (ms) => {
-    const totalSegundos = Math.floor(ms / 1000); // Convertir milisegundos a segundos
-    const minutos = Math.floor(totalSegundos / 60); // Calcular los minutos
-    const segundos = totalSegundos % 60; // Calcular los segundos restantes
-
-    // Retornar el tiempo en formato "minutos:segundos", asegurando que los segundos tengan dos dígitos
-    return `${minutos} min ${segundos.toString().padStart(2, "0")} seg`;
-};
 
 
-    const cambiarUsuario = () => {
-        if (compradores.length === 0) return;
-
-        const nuevoIndex = (indexUsuario + 1) % compradores.length;
-        setIndexUsuario(nuevoIndex);
-
-        const nuevoUsuario = compradores[nuevoIndex];
-        setUsuarioActual(nuevoUsuario.id);
-
-        toast.success(`Ahora estás pujando como: ${nuevoUsuario.nombreUsuario}`);
-    };
 
     const confirmarPago = async () => {
-    try {
-        await pagoService.confirmarPago(pago.id);
+        try {
+            await pagoService.confirmarPago(pago.id);
 
-        const res = await pagoService.getPagoBySubasta(id);
-        setPago(res.data.data);
+            const res = await pagoService.getPagoBySubasta(id);
+            setPago(res.data.data);
 
-        toast.success("Pago confirmado");
-    } catch (error) {
-        console.error(error);
-        toast.error("Error al confirmar pago");
-    }
-};
+            toast.success("Pago confirmado");
+        } catch (error) {
+            console.error(error);
+            toast.error("Error al confirmar pago");
+        }
+    };
 
     if (loading) return (
         <div className="min-h-screen bg-[#080807] flex items-center justify-center">
@@ -381,47 +342,44 @@ const formatearTiempo = (ms) => {
 
                                 <div className="relative p-6">
                                     <div className="flex items-center justify-between mb-1">
-                                    <SectionLabel>Puja más Alta Actual</SectionLabel>
-                                    <TrendingUp className="w-4 h-4 text-[#C9A84C]" />
+                                        <SectionLabel>Puja más Alta Actual</SectionLabel>
+                                        <TrendingUp className="w-4 h-4 text-[#C9A84C]" />
                                     </div>
 
                                     <p
-                                    className="text-4xl md:text-5xl font-light text-[#C9A84C] tracking-tight mt-2"
-                                    style={{ textShadow: "0 0 40px rgba(201,168,76,0.4)" }}
+                                        className="text-4xl md:text-5xl font-light text-[#C9A84C] tracking-tight mt-2"
+                                        style={{ textShadow: "0 0 40px rgba(201,168,76,0.4)" }}
                                     >
-                                    {fmt(pujaActual)}
+                                        {fmt(pujaActual)}
                                     </p>
 
                                     {/* Timer placed below the bid amount */}
                                     <div className="mt-2 text-[14px] font-mono text-[#C9A84C]/50">
-                                    <p>{"Tiempo restante: " + formatearTiempo(tiempoRestante)}</p>
+                                        <p>{"Tiempo restante: " + formatearTiempo(tiempoRestante)}</p>
                                     </div>
 
                                     {topBidder && (
-                                    <div
-                                        className={`flex items-center gap-2 mt-3 pt-3 border-t ${
-                                        estaFinalizada
-                                            ? "border-green-500/30 bg-green-500/5 p-2"
-                                            : "border-[#C9A84C]/20"
-                                        }`}
-                                    >
-                                        <Crown
-                                        className={`w-3.5 h-3.5 ${
-                                            estaFinalizada ? "text-green-500" : "text-[#C9A84C]"
-                                        }`}
-                                        />
-                                        <span
-                                        className={`text-[11px] tracking-[0.2em] uppercase ${
-                                            estaFinalizada ? "text-green-400" : "text-[#C9A84C]/80"
-                                        }`}
+                                        <div
+                                            className={`flex items-center gap-2 mt-3 pt-3 border-t ${estaFinalizada
+                                                ? "border-green-500/30 bg-green-500/5 p-2"
+                                                : "border-[#C9A84C]/20"
+                                                }`}
                                         >
-                                        {estaFinalizada ? "Ganador Oficial: " : "Mejor postor: "}
-                                        <span className="font-bold">{topBidder}</span>
-                                        </span>
-                                    </div>
+                                            <Crown
+                                                className={`w-3.5 h-3.5 ${estaFinalizada ? "text-green-500" : "text-[#C9A84C]"
+                                                    }`}
+                                            />
+                                            <span
+                                                className={`text-[11px] tracking-[0.2em] uppercase ${estaFinalizada ? "text-green-400" : "text-[#C9A84C]/80"
+                                                    }`}
+                                            >
+                                                {estaFinalizada ? "Ganador Oficial: " : "Mejor postor: "}
+                                                <span className="font-bold">{topBidder}</span>
+                                            </span>
+                                        </div>
                                     )}
                                 </div>
-                                </div>
+                            </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="border border-[#C9A84C]/15 bg-[#0E0D0B] p-4 hover:border-[#C9A84C]/35 transition-colors">
                                     <SectionLabel>Precio Base</SectionLabel>
@@ -535,36 +493,36 @@ const formatearTiempo = (ms) => {
                                 )}
 
                                 {estaFinalizada && pago && (
-                                <div className="mb-4 p-4 border border-blue-500/30 bg-blue-500/5 rounded-sm">
-                                    <p className="text-sm text-blue-300">
-                                        Estado del pago: <strong>{pago.estado}</strong>
-                                    </p>
+                                    <div className="mb-4 p-4 border border-blue-500/30 bg-blue-500/5 rounded-sm">
+                                        <p className="text-sm text-blue-300">
+                                            Estado del pago: <strong>{pago.estado}</strong>
+                                        </p>
 
-                                    <p className="text-sm text-blue-300">
-                                        Monto pagado: <strong>{fmt(pago.montoPagado)}</strong>
-                                    </p>
+                                        <p className="text-sm text-blue-300">
+                                            Monto pagado: <strong>{fmt(pago.montoPagado)}</strong>
+                                        </p>
 
-                                    {pago.idEstadoPago === 1 && (
-                                        <button
-                                            onClick={confirmarPago}
-                                            className="mt-3 px-4 py-2 bg-green-600 text-white hover:bg-green-700 transition"
-                                        >
-                                            Confirmar Pago
-                                        </button>
-                                    )}
-                                </div>
-                            )}
+                                        {pago.idEstadoPago === 1 && (
+                                            <button
+                                                onClick={confirmarPago}
+                                                className="mt-3 px-4 py-2 bg-green-600 text-white hover:bg-green-700 transition"
+                                            >
+                                                Confirmar Pago
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Botón de puja que esta habilitado o no segun el estado de la subasta */}
                                 <button
-                                onClick={handleRealizarPuja}
-                                disabled={loadingPuja || estaFinalizada}
-                                className={`relative group w-full overflow-hidden flex items-center justify-center gap-3 py-3.5 
+                                    onClick={handleRealizarPuja}
+                                    disabled={loadingPuja || estaFinalizada}
+                                    className={`relative group w-full overflow-hidden flex items-center justify-center gap-3 py-3.5 
                                 border font-bold text-[11px] tracking-[0.4em] uppercase transition-all duration-300
                                 ${estaFinalizada
-                                    ? "bg-gray-500 border-gray-500 text-gray-300 cursor-not-allowed opacity-50"
-                                    : "bg-gradient-to-r from-[#C9A84C] via-[#E2C36A] to-[#C9A84C] border-[#C9A84C] text-[#080807] hover:shadow-[0_0_35px_rgba(201,168,76,0.5)] hover:scale-[1.01] active:scale-[0.98]"
-                                }`}
+                                            ? "bg-gray-500 border-gray-500 text-gray-300 cursor-not-allowed opacity-50"
+                                            : "bg-gradient-to-r from-[#C9A84C] via-[#E2C36A] to-[#C9A84C] border-[#C9A84C] text-[#080807] hover:shadow-[0_0_35px_rgba(201,168,76,0.5)] hover:scale-[1.01] active:scale-[0.98]"
+                                        }`}
                                 >
                                     <span className="absolute inset-0 translate-x-[-110%] group-hover:translate-x-[110%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-20deg]" />
                                     <Gavel className={`w-4 h-4 shrink-0 ${loadingPuja ? 'animate-bounce' : ''}`} />
@@ -572,11 +530,6 @@ const formatearTiempo = (ms) => {
                                 </button>
                             </div>
                         </div>
-                        <button
-                            onClick={cambiarUsuario}
-                            className="w-full py-2 border border-[#C9A84C]/40 text-[#C9A84C] text-[10px] tracking-[0.3em] uppercase hover:bg-[#C9A84C]/10 transition disabled:opacity-40">
-                            Cambiar Usuario
-                        </button>
                     </div>
                 </div>
 

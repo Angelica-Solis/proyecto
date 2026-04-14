@@ -38,13 +38,13 @@ const rutas = createBrowserRouter([
       { index: true, element: <Home /> },
       { path: "*", element: <PageNotFound /> },
 
-      // 🔓 RUTAS PÚBLICAS
+      // publicas
       { path: "user/login", element: <Login /> },
       { path: "user/create", element: <CreateUsuario /> },
       { path: "subastas", element: <SubastaTable /> },
       { path: "objeto/listado", element: <ObjetoTable /> },
 
-      // 🔐 SOLO ADMIN
+      // admin
       {
         path: "user/table",
         element: (
@@ -78,7 +78,7 @@ const rutas = createBrowserRouter([
         )
       },
 
-      // 🔐 ADMIN y VENDEDOR (mantenimiento subastas)
+      // admin y vendedor
       {
         path: "mantenimiento/subastas/crear",
         element: (
@@ -96,21 +96,21 @@ const rutas = createBrowserRouter([
         )
       },
 
-      // 🔐 SOLO COMPRADOR (pujar)
+      // comprador en puja
       {
         path: "subastas/participar/:id",
         element: (
-          <RoleRoute requiredRoles={["Comprador"]}>
+          <RoleRoute requiredRoles={["Administrador", "Comprador", "Vendedor"]}>
             <SubastaEnCurso />
           </RoleRoute>
         )
       },
 
-      // 🔐 TODOS LOGUEADOS
+      // logueados
       {
         path: "subasta/detalle/:id",
         element: (
-          <RoleRoute>
+          <RoleRoute requiredRoles={["Administrador", "Comprador", "Vendedor"]}>
             <SubastaDetalle />
           </RoleRoute>
         )
@@ -118,17 +118,17 @@ const rutas = createBrowserRouter([
       {
         path: "objeto/detalle/:id",
         element: (
-          <RoleRoute>
+          <RoleRoute requiredRoles={["Administrador", "Comprador", "Vendedor"]}>
             <ObjetoDetalle />
           </RoleRoute>
         )
       },
 
-      // 🔐 MANTENIMIENTO OBJETOS (SOLO ADMIN)
+      // mantenimiento objetos
       {
         path: "objeto/create",
         element: (
-          <RoleRoute requiredRoles={["Administrador"]}>
+          <RoleRoute requiredRoles={["Administrador", "Vendedor"]}>
             <CreateObjeto />
           </RoleRoute>
         )
@@ -136,7 +136,7 @@ const rutas = createBrowserRouter([
       {
         path: "objeto/update/:id",
         element: (
-          <RoleRoute requiredRoles={["Administrador"]}>
+          <RoleRoute requiredRoles={["Administrador", "Vendedor"]}>
             <UpdateObjeto />
           </RoleRoute>
         )

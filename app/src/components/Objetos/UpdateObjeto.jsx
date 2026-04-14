@@ -34,7 +34,6 @@ export function UpdateObjeto() {
     const [file, setFile] = useState(null);
     const [fileURL, setFileURL] = useState(null);
     const [error, setError] = useState("");
-    const usuarioActual = 1;
     const [vendedor, setVendedor] = useState({ id: 0, nombre: "" });
     const [dataCategorias, setCategorias] = useState([]);
 
@@ -51,7 +50,7 @@ export function UpdateObjeto() {
             nombreObjeto: "",
             descripcionObjeto: "",
             idCondicion: "",
-            idVendedor: usuarioActual,
+            idVendedor: 0,
             idEstadoObjeto: "",
             categorias: []
         },
@@ -79,19 +78,6 @@ export function UpdateObjeto() {
         fetchCategorias();
     }, []);
 
-    //Definir vendedor 
-    useEffect(() => {
-        const fetchVendedor = async () => {
-            try {
-                const res = await userService.getUserById(usuarioActual);
-                setVendedor(res.data.data);
-                setValue("idVendedor", res.data.data.id);
-            } catch (err) {
-                console.error("Error al cargar vendedor:", err);
-            }
-        };
-        fetchVendedor();
-    }, [usuarioActual, setValue]);
 
     const handleChangeImage = (e) => {
         const selectedFile = e.target.files?.[0];
@@ -105,25 +91,36 @@ export function UpdateObjeto() {
         const fetchData = async () => {
             try {
                 const objetoRes = await objetoService.getObjetoById(id);
+
                 if (objetoRes.data) {
                     const objeto = objetoRes.data.data;
+
+                    // traer vendedor real del objeto
+                    const vendedorRes = await userService.getUserById(objeto.idVendedor);
+
+                    setVendedor(vendedorRes.data.data);
+
                     reset({
                         nombreObjeto: objeto.nombreObjeto,
                         descripcionObjeto: objeto.descripcionObjeto,
                         idCondicion: objeto.idCondicion,
                         idEstadoObjeto: objeto.idEstadoObjeto,
-                        idVendedor: objeto.idVendedor,
+                        idVendedor: objeto.idVendedor, 
                         categorias: objeto.categorias.map(c => parseInt(c.id))
                     });
+
                     if (objeto.imagenes && objeto.imagenes.length > 0) {
                         setFileURL(`${BASE_URL_image}/${objeto.imagenes[0].nombreImagen}`);
                     }
+
                     console.log("OBJETO COMPLETO:", objeto);
                 }
+
             } catch (err) {
                 if (err.name !== "AbortError") setError(err.message);
             }
         };
+
         fetchData();
     }, [BASE_URL_image, id, reset]);
 

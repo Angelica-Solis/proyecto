@@ -9,12 +9,14 @@ import {
 import PropTypes from "prop-types";
 
 export function RoleRoute({ children, requiredRoles }) {
-    const { authorize } = useUser();
+    const { authorize, user } = useUser();
     const hasShownToast = useRef(false);
     const navigate = useNavigate();
 
     const isAuthorized = authorize(requiredRoles);
-
+    console.log("USER DESDE CONTEXTO:", user);
+console.log("ROL DEL USER:", user?.rol || user?.role);
+console.log("ROLES REQUERIDOS:", requiredRoles);
     useEffect(() => {
         // Solo mostrar el toast una vez por intento
         if (!isAuthorized && !hasShownToast.current) {
@@ -22,6 +24,7 @@ export function RoleRoute({ children, requiredRoles }) {
                 duration: 3000,
             });
             hasShownToast.current = true;
+            
         }
     }, [isAuthorized]);
 

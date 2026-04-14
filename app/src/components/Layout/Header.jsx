@@ -274,19 +274,6 @@ export default function Header() {
 
         {/* Carrito*/}
         <div className="flex items-center gap-5 ml-auto md:ml-0">
-          <Link to="/cart" style={{ position: "relative", color: G.whiteDim, transition: "color 0.3s" }}
-            onMouseEnter={e => e.currentTarget.style.color = G.gold}
-            onMouseLeave={e => e.currentTarget.style.color = G.whiteDim}
-          >
-            <ShoppingCart className="h-5 w-5" />
-            <span style={{
-              position: "absolute", top: -8, right: -10,
-              background: G.gold, color: G.dark,
-              fontSize: 9, fontWeight: 600, fontFamily: "'Montserrat', sans-serif",
-              width: 18, height: 18, borderRadius: "50%",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>3</span>
-          </Link>
 
           {/* Bottn de registro*/}
           <Link to="/user/create" className="hidden md:inline-flex" style={{
