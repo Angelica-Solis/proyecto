@@ -51,50 +51,87 @@ class UsuarioModel
     //Obtener detalle de cada usuario
     public function DetalleUsuarios($id)
     {
-        // 1. Información básica (REQUERIDO: Nombre, Rol, Estado, Fecha)
+        // 1. Información básica
         $vSql = "SELECT u.id, u.nombreUsuario, r.nombreRol, e.descripcionEstado, u.fecha_registro, u.emailUsuario
-            FROM usuario u
-            INNER JOIN rol r ON r.id = u.IdRol
-            INNER JOIN estado_usuario e ON e.id = u.IdEstado
-            WHERE u.id = $id;";
+        FROM usuario u
+        INNER JOIN rol r ON r.id = u.IdRol
+        INNER JOIN estado_usuario e ON e.id = u.IdEstado
+        WHERE u.id = $id;";
 
         $vResultado = $this->enlace->executeSQL($vSql);
 
         if (!empty($vResultado)) {
             $usuario = $vResultado[0];
 
-            // 2. Campos Calculados
-            // Conteo de Subastas creadas
+            // 2. Cantidades
             $sqlCountSubastas = "SELECT COUNT(*) as total FROM subasta WHERE idVendedor = $id";
             $resSub = $this->enlace->executeSQL($sqlCountSubastas);
             $usuario->cantidadSubastas = $resSub[0]->total;
 
-            // Conteo de Pujas realizadas
             $sqlCountPujas = "SELECT COUNT(*) as total FROM puja WHERE idUsuario = $id";
             $resPuja = $this->enlace->executeSQL($sqlCountPujas);
             $usuario->cantidadPujas = $resPuja[0]->total;
 
-            // 3. Historial detallado
             $usuario->actividad = [];
+            $usuario->subastas = [];
+            $usuario->pujas = [];
+
+            // VENDEDOR
             if ($usuario->nombreRol == 'Vendedor') {
-                $sqlVendedor = "SELECT o.nombreObjeto as titulo, s.precioBase as monto, s.fechaInicio as fecha
+
+                $sql = "SELECT o.nombreObjeto as titulo, s.precioBase as monto, s.fechaInicio as fecha, 'subasta' as tipo
+                    FROM subasta s
+                    INNER JOIN objeto o ON s.idObjeto = o.id
+                    WHERE s.idVendedor = $id
+                    ORDER BY s.fechaInicio DESC";
+
+                $usuario->actividad = $this->enlace->executeSQL($sql) ?: [];
+                $usuario->subastas = $usuario->actividad;
+            }
+
+            // COMPRADOR
+            elseif ($usuario->nombreRol == 'Comprador') {
+
+                $sql = "SELECT o.nombreObjeto as titulo, p.monto, p.fechaHora as fecha, 'puja' as tipo
+                    FROM puja p
+                    INNER JOIN subasta s ON p.idSubasta = s.id
+                    INNER JOIN objeto o ON s.idObjeto = o.id
+                    WHERE p.idUsuario = $id
+                    ORDER BY p.fechaHora DESC";
+
+                $usuario->actividad = $this->enlace->executeSQL($sql) ?: [];
+                $usuario->pujas = $usuario->actividad;
+            }
+
+            // ADMINISTRADOR 
+            elseif ($usuario->nombreRol == 'Administrador') {
+
+                // Subastas
+                $sqlSubastas = "SELECT o.nombreObjeto as titulo, s.precioBase as monto, s.fechaInicio as fecha, 'subasta' as tipo
                             FROM subasta s
                             INNER JOIN objeto o ON s.idObjeto = o.id
                             WHERE s.idVendedor = $id
                             ORDER BY s.fechaInicio DESC";
-                $usuario->actividad = $this->enlace->executeSQL($sqlVendedor) ?: [];
-            } else {
-                $sqlComprador = "SELECT o.nombreObjeto as titulo, p.monto, p.fechaHora as fecha
-                            FROM puja p
-                            INNER JOIN subasta s ON p.idSubasta = s.id
-                            INNER JOIN objeto o ON s.idObjeto = o.id
-                            WHERE p.idUsuario = $id
-                            ORDER BY p.fechaHora DESC";
-                $usuario->actividad = $this->enlace->executeSQL($sqlComprador) ?: [];
+
+                $usuario->subastas = $this->enlace->executeSQL($sqlSubastas) ?: [];
+
+                // Pujas
+                $sqlPujas = "SELECT o.nombreObjeto as titulo, p.monto, p.fechaHora as fecha, 'puja' as tipo
+                         FROM puja p
+                         INNER JOIN subasta s ON p.idSubasta = s.id
+                         INNER JOIN objeto o ON s.idObjeto = o.id
+                         WHERE p.idUsuario = $id
+                         ORDER BY p.fechaHora DESC";
+
+                $usuario->pujas = $this->enlace->executeSQL($sqlPujas) ?: [];
+
+                // Mantener también actividad (por si frontend la usa)
+                $usuario->actividad = array_merge($usuario->subastas, $usuario->pujas);
             }
 
             return $usuario;
         }
+
         return null;
     }
 

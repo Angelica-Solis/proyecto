@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Mail, Calendar, Activity, Gavel, Package } from "lucide-react";
 import UserService from "@/services/UserService";
+import { useUser } from "@/hooks/useUser";
 
 function DetailRow({ icon: Icon, label, value }) {
     return (
@@ -19,17 +20,44 @@ function DetailRow({ icon: Icon, label, value }) {
     );
 }
 
-export function UserDetail() {
-    const { id } = useParams();
+export function Historial() {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const { user: currentUser } = useUser();
+    const id = currentUser?.id;
 
     useEffect(() => {
+        if (!id) return;
+
         UserService.getUserDetail(id)
-            .then((res) => { setUser(res.data.data); setLoading(false); })
-            .catch((err) => { console.error("Error al cargar:", err); setLoading(false); });
+            .then((res) => {
+                setUser(res.data.data);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error("Error al cargar:", err);
+                setLoading(false);
+            });
     }, [id]);
+
+    //Filtrar 
+    const actividadFiltrada = user?.actividad?.filter((item) => {
+        if (user.nombreRol === "Administrador") {
+            return true; //ve todo
+        }
+
+        if (user.nombreRol === "Vendedor") {
+            return item.tipo === "subasta"; //solo subastas
+        }
+
+        if (user.nombreRol === "Comprador") {
+            return item.tipo === "puja"; //solo pujas
+        }
+
+        return false;
+    });
+
 
     return (
         <div className="min-h-screen bg-[#080807] text-[#F5F0E8] p-10 font-sans">
@@ -44,7 +72,7 @@ export function UserDetail() {
                         </span>
                     </div>
                     <h1 className="text-4xl font-light tracking-tight leading-none">
-                        Detalle de{" "}
+                        Historial de{" "}
                         <em className="text-[#C9A84C] not-italic font-light">Usuario</em>
                     </h1>
                 </div>
@@ -147,7 +175,11 @@ export function UserDetail() {
                         <div className="flex items-center gap-3 p-6 border-b border-[#C9A84C]/20 bg-[#C9A84C]/5">
                             <Activity className="h-4 w-4 text-[#C9A84C]" />
                             <span className="text-[#C9A84C] uppercase tracking-[0.4em] text-[11px] font-medium">
-                                {user.nombreRol === "Vendedor" ? "Historial de Ventas" : "Historial de Participación"}
+                                {user.nombreRol === "Administrador"
+                                    ? "Historial General"
+                                    : user.nombreRol === "Vendedor"
+                                        ? "Historial de Subastas"
+                                        : "Historial de Pujas"}
                             </span>
                         </div>
 
@@ -161,40 +193,34 @@ export function UserDetail() {
                                         Subastas creadas
                                     </p>
 
-                                    {user.subastas && user.subastas.length > 0 ? (
+                                    {user.subastas?.length > 0 ? (
                                         user.subastas.map((item, index) => (
                                             <div
                                                 key={index}
                                                 className={`
-                                                    flex justify-between items-center px-8 py-5
-                                                    border-b border-[#C9A84C]/[0.07]
-                                                    hover:bg-[#C9A84C]/[0.06] transition-colors duration-200
-                                                    ${index % 2 !== 0 ? "bg-[#F5F0E8]/[0.03]" : ""}
-                                                `}
+                                                flex justify-between items-center px-8 py-5
+                                                border-b border-[#C9A84C]/[0.07]
+                                                ${index % 2 !== 0 ? "bg-[#F5F0E8]/[0.03]" : ""}
+                                            `}
                                             >
                                                 <div>
                                                     <p className="text-base font-light italic text-[#F5F0E8]">
                                                         {item.titulo}
                                                     </p>
-                                                    <p className="text-[12px] text-[#F5F0E8]/40 mt-1">
+                                                    <p className="text-[12px] text-[#F5F0E8]/40">
                                                         {new Date(item.fecha).toLocaleString()}
                                                     </p>
                                                 </div>
 
-                                                <div className="text-right">
-                                                    <span className="inline-flex items-center justify-center px-3 py-1 border border-[#C9A84C]/25 bg-[#C9A84C]/[0.07] text-[#C9A84C] text-[13px] font-medium tracking-widest">
-                                                        ${parseFloat(item.monto).toLocaleString()}
-                                                    </span>
-                                                    <p className="text-[11px] tracking-[0.3em] uppercase text-[#F5F0E8]/40 mt-1">
-                                                        Base
-                                                    </p>
-                                                </div>
+                                                <span className="text-[#C9A84C] text-sm">
+                                                    ${parseFloat(item.monto).toLocaleString()}
+                                                </span>
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="px-8 py-6 text-[#F5F0E8]/40 text-sm">
-                                            Sin subastas registradas
-                                        </div>
+                                        <p className="px-8 py-4 text-[#F5F0E8]/40 text-sm">
+                                            Sin subastas
+                                        </p>
                                     )}
                                 </div>
 
@@ -204,40 +230,34 @@ export function UserDetail() {
                                         Pujas realizadas
                                     </p>
 
-                                    {user.pujas && user.pujas.length > 0 ? (
+                                    {user.pujas?.length > 0 ? (
                                         user.pujas.map((item, index) => (
                                             <div
                                                 key={index}
                                                 className={`
-                                                    flex justify-between items-center px-8 py-5
-                                                    border-b border-[#C9A84C]/[0.07]
-                                                    hover:bg-[#C9A84C]/[0.06] transition-colors duration-200
-                                                    ${index % 2 !== 0 ? "bg-[#F5F0E8]/[0.03]" : ""}
-                                                `}
+                                                flex justify-between items-center px-8 py-5
+                                                border-b border-[#C9A84C]/[0.07]
+                                                ${index % 2 !== 0 ? "bg-[#F5F0E8]/[0.03]" : ""}
+                                            `}
                                             >
                                                 <div>
                                                     <p className="text-base font-light italic text-[#F5F0E8]">
                                                         {item.titulo}
                                                     </p>
-                                                    <p className="text-[12px] text-[#F5F0E8]/40 mt-1">
+                                                    <p className="text-[12px] text-[#F5F0E8]/40">
                                                         {new Date(item.fecha).toLocaleString()}
                                                     </p>
                                                 </div>
 
-                                                <div className="text-right">
-                                                    <span className="inline-flex items-center justify-center px-3 py-1 border border-[#C9A84C]/25 bg-[#C9A84C]/[0.07] text-[#C9A84C] text-[13px] font-medium tracking-widest">
-                                                        ${parseFloat(item.monto).toLocaleString()}
-                                                    </span>
-                                                    <p className="text-[11px] tracking-[0.3em] uppercase text-[#F5F0E8]/40 mt-1">
-                                                        Puja
-                                                    </p>
-                                                </div>
+                                                <span className="text-[#C9A84C] text-sm">
+                                                    ${parseFloat(item.monto).toLocaleString()}
+                                                </span>
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="px-8 py-6 text-[#F5F0E8]/40 text-sm">
-                                            Sin pujas registradas
-                                        </div>
+                                        <p className="px-8 py-4 text-[#F5F0E8]/40 text-sm">
+                                            Sin pujas
+                                        </p>
                                     )}
                                 </div>
 
@@ -245,37 +265,33 @@ export function UserDetail() {
 
                         ) : (
 
-                            user.actividad && user.actividad.length > 0 ? (
-                                <div>
-                                    {user.actividad.map((item, index) => (
-                                        <div
-                                            key={index}
-                                            className={`
-                                                flex justify-between items-center px-8 py-5
-                                                border-b border-[#C9A84C]/[0.07] last:border-0
-                                                hover:bg-[#C9A84C]/[0.06] transition-colors duration-200
-                                                ${index % 2 !== 0 ? "bg-[#F5F0E8]/[0.03]" : "bg-transparent"}
-                                            `}
-                                        >
-                                            <div>
-                                                <p className="text-base font-light italic text-[#F5F0E8]">
-                                                    {item.titulo}
-                                                </p>
-                                                <p className="text-[12px] font-light tracking-wide text-[#F5F0E8]/40 mt-1">
-                                                    {item.fecha ? new Date(item.fecha).toLocaleString() : "Fecha no disponible"}
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className="inline-flex items-center justify-center px-3 py-1 border border-[#C9A84C]/25 bg-[#C9A84C]/[0.07] text-[#C9A84C] text-[13px] font-medium tracking-widest">
-                                                    ${parseFloat(item.monto).toLocaleString()}
-                                                </span>
-                                                <p className="text-[11px] tracking-[0.3em] uppercase text-[#F5F0E8]/40 mt-1">
-                                                    Monto
-                                                </p>
-                                            </div>
+                            actividadFiltrada && actividadFiltrada.length > 0 ? (
+                                actividadFiltrada.map((item, index) => (
+                                    <div
+                                        key={index}
+                                        className={`
+                                        flex justify-between items-center px-8 py-5
+                                        border-b border-[#C9A84C]/[0.07] last:border-0
+                                        hover:bg-[#C9A84C]/[0.06] transition-colors duration-200
+                                        ${index % 2 !== 0 ? "bg-[#F5F0E8]/[0.03]" : "bg-transparent"}
+                                    `}
+                                    >
+                                        <div>
+                                            <p className="text-base font-light italic text-[#F5F0E8]">
+                                                {item.titulo}
+                                            </p>
+                                            <p className="text-[12px] font-light tracking-wide text-[#F5F0E8]/40 mt-1">
+                                                {item.fecha ? new Date(item.fecha).toLocaleString() : "Fecha no disponible"}
+                                            </p>
                                         </div>
-                                    ))}
-                                </div>
+                                        <div className="text-right">
+                                            <span className="inline-flex items-center justify-center px-3 py-1 border border-[#C9A84C]/25 bg-[#C9A84C]/[0.07] text-[#C9A84C] text-[13px] font-medium tracking-widest">
+                                                ${parseFloat(item.monto).toLocaleString()}
+                                            </span>
+                                            <p className="text-[11px] tracking-[0.3em] uppercase text-[#F5F0E8]/40 mt-1">Monto</p>
+                                        </div>
+                                    </div>
+                                ))
                             ) : (
                                 <div className="py-16 flex flex-col items-center gap-3">
                                     <div className="w-2 h-2 border border-[#C9A84C]/50 rotate-45" />

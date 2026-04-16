@@ -52,6 +52,7 @@ export function ActualizarUsuario() {
                         IdRol: u.IdRol,
                         fecha_registro: u.fecha_registro,
                         nombreRol: u.nombreRol,
+                        descripcionEstado: u.descripcionEstado,
                         IdEstado: u.descripcionEstado === "Activo" ? 1 : 2
                     });
                 }
@@ -70,8 +71,10 @@ export function ActualizarUsuario() {
 
             const response = await UserService.getUserUpdate(dataForm);
             if (response.data) {
-                toast.success(`Usuario actualizado correctamente`, { duration: 3000 });
-                navigate("/user/table");
+                toast.success("Usuario actualizado con éxito");
+                setTimeout(() => {
+                    navigate("/", { replace: true });
+                }, 150);
             } else if (response.error) {
                 setError(response.error);
             }

@@ -31,6 +31,7 @@ import { PujaTable } from './components/Pujas/ListadoPujas'
 import { RoleRoute } from './components/Auth/RoleRoute'
 import UserProvider from './context/UserProvider';
 import { ActualizarUsuario } from './components/User/ActualizarUsuario';
+import { Historial } from './components/User/MostrarHistorial';
 
 const rutas = createBrowserRouter([
   {
@@ -67,6 +68,14 @@ const rutas = createBrowserRouter([
         element: (
           <RoleRoute requiredRoles={["Administrador"]}>
             <UpdateUser />
+          </RoleRoute>
+        )
+      },
+      {
+        path: "user/historial",
+        element: (
+          <RoleRoute requiredRoles={["Administrador", "Comprador", "Vendedor"]}>
+            <Historial />
           </RoleRoute>
         )
       },
