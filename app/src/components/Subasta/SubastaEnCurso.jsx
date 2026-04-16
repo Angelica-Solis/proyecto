@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Crown, Clock, TrendingUp, User, Gavel, ChevronLeft, ChevronRight, History } from "lucide-react";
 import subastaService from "@/services/SubastaService";
@@ -87,7 +87,7 @@ export function SubastaEnCurso() {
     const [pago, setPago] = useState(null);
     const [cerrada, setCerrada] = useState(false);
     const { user } = useUser();
-
+    const procesandoCierre = useRef(false); // Variable booleana persistente para evitar múltiples ejecuciones del cierre de subasta
 
 
     //PUSHER
@@ -124,6 +124,18 @@ export function SubastaEnCurso() {
                 console.error(error);
             }
         });
+
+    channel.bind("subasta-finalizada", async (data) => {
+        if (String(data.idSubasta) !== String(id)) return;
+        try {
+            const response = await subastaService.getDetalle(id);
+            setSubasta(response.data.data);
+            setCerrada(true);
+            toast.info("La subasta ha finalizado");
+        } catch (error) {
+            console.error("Error al recibir cierre por Pusher:", error);
+        }
+    });
 
         return () => {
             channel.unbind_all();
@@ -167,38 +179,59 @@ export function SubastaEnCurso() {
         }
     };
     const [tiempoRestante, setTiempoRestante] = useState(0);
+
     useEffect(() => {
-        if (!subasta?.fechaCierre) return;
+    if (!subasta?.fechaCierre) return;
 
-        const cerrarSubastaFrontend = async () => {
-            try {
-                const response = await subastaService.getDetalle(id);
-                setSubasta(response.data.data);
+    const cerrarSubastaFrontend = async () => {
+    if (procesandoCierre.current) return;
+    
+    try {
+        procesandoCierre.current = true;
+        const response = await subastaService.getDetalle(id);
+        setSubasta(response.data.data);
+        setCerrada(true);
+        toast.success("Subasta finalizada");
+    } catch (error) {
+        console.error("Error al cerrar la subasta:", error);
+        
+        // Mostrar el mensaje de error real que viene del servidor
+        if (error.response?.data) {
+            console.error("Error del servidor:", error.response.data);
+            
+            // Mostrar el error en un toast para debugging
+            toast.error(`Error: ${error.response.data.message || 'Desconocido'}`, {
+                duration: 10000 // 10 segundos para poder leerlo
+            });
+            
+            // También mostrarlo en la consola de forma más visible
+            console.log("%c=== ERROR DETALLADO DEL SERVIDOR ===", "background: red; color: white; font-size: 14px");
+            console.log("Mensaje:", error.response.data.message);
+            console.log("Archivo:", error.response.data.file);
+            console.log("Línea:", error.response.data.line);
+        }
+        
+        procesandoCierre.current = false;
+    }
+};
 
-            } catch (error) {
-                console.error(error);
-            }
-        };
+    const interval = setInterval(() => {
+        const ahora = new Date().getTime();
+        const cierre = new Date(subasta.fechaCierre).getTime();
+        const diferencia = cierre - ahora;
 
-        const interval = setInterval(() => {
-            const ahora = new Date().getTime();
-            const cierre = new Date(subasta.fechaCierre).getTime();
+        if (diferencia <= 0 && !cerrada) {
+            clearInterval(interval);
+            setCerrada(true);
+            setTiempoRestante(0);
+            cerrarSubastaFrontend(); // Llamada controlada
+        } else if (diferencia > 0) {
+            setTiempoRestante(diferencia);
+        }
+    }, 1000);
 
-            const diferencia = cierre - ahora;
-
-            if (diferencia <= 0 && !cerrada) {
-                setCerrada(true);
-                cerrarSubastaFrontend();
-                setTiempoRestante(0);
-                clearInterval(interval);
-            } else {
-                setTiempoRestante(diferencia);
-            }
-
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [subasta]);
+    return () => clearInterval(interval);
+}, [subasta?.fechaCierre, cerrada, id]);
 
     useEffect(() => {
         const cargarPago = async () => {
