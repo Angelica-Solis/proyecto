@@ -108,8 +108,7 @@ class SubastaModel
         if (!empty($vResultado)) {
             $vResultado = $vResultado[0];
 
-            // 2. INFORMACIÓN DEL OBJETO: Nombre, Imagen, Categorías, Condición
-            // El ObjetoModel ya se encarga de traer todo esto por separado
+            // 2. INFORMACIÓN DEL OBJETO
             $vResultado->objeto = $objetoM->get($vResultado->idObjeto);
 
             // 3. DATOS DE LA SUBASTA: Estado actual
@@ -119,8 +118,27 @@ class SubastaModel
             $vResultado->historialPujas = $this->getHistorialPujas($id);
             $vResultado->cantidadPujas = count($vResultado->historialPujas);
 
-            // 5. DATOS DEL VENDEDOR (Extra para el detalle)
+            // 5. DATOS DEL VENDEDOR
             $vResultado->vendedor = $usuarioM->get($vResultado->idVendedor);
+
+            // 6. Si la subasta está finalizada, traemos el resultado y pago
+            if ($vResultado->idEstadoSubasta == 2) {
+                try {
+                    $sqlPago = "SELECT p.*, rs.montoFinal, rs.idUsuarioGanador 
+                                FROM pago p 
+                                JOIN resultado_subasta rs ON p.idResultado = rs.id 
+                                WHERE rs.idSubasta = $id 
+                                LIMIT 1";
+                    $resPago = $this->enlace->executeSQL($sqlPago);
+                    $vResultado->pago = (!empty($resPago)) ? $resPago[0] : null;
+                    
+                    // Log para depuración
+                    error_log("Subasta $id finalizada. Pago: " . ($vResultado->pago ? 'Existe' : 'No existe'));
+                } catch (Exception $e) {
+                    error_log("Error al obtener pago para subasta $id: " . $e->getMessage());
+                    $vResultado->pago = null;
+                }
+            }
         }
 
         return $vResultado;
@@ -139,7 +157,7 @@ class SubastaModel
         $vSql = "SELECT monto, fechaHora, idUsuario 
             FROM puja 
             WHERE idSubasta = $idSubasta 
-            ORDER BY monto ASC;";
+            ORDER BY monto DESC;";
 
         $vResultado = $this->enlace->executeSQL($vSql);
 
@@ -399,7 +417,8 @@ class SubastaModel
             if (!empty($existe) && $existe[0]->total == 0) {
 
                 // 🔹 Obtener puja ganadora
-                $sqlPuja = "SELECT * FROM puja 
+                $sqlPuja = "SELECT id, monto, idUsuario 
+                            FROM puja 
                             WHERE idSubasta = $id 
                             ORDER BY monto DESC 
                             LIMIT 1";
@@ -408,20 +427,37 @@ class SubastaModel
 
                 if (!empty($puja)) {
                     $puja = $puja[0];
+                    
+                    // Log para depuración
+                    error_log("Puja encontrada - ID: {$puja->id}, Usuario: {$puja->idUsuario}, Monto: {$puja->monto}");
 
-                    // 🔹 Crear resultado
-                    $sqlResultado = "INSERT INTO resultado_subasta 
-                        (idSubasta, idUsuarioGanador, idPujaGanadora, montoFinal)
-                        VALUES ($id, $puja->idUsuario, $puja->id, $puja->monto)";
+                    // 🔹 Verificar que no exista ya un resultado para esta puja
+                    $sqlCheckResultado = "SELECT id FROM resultado_subasta WHERE idPujaGanadora = {$puja->id}";
+                    $checkResultado = $this->enlace->executeSQL($sqlCheckResultado);
+                    
+                    if (empty($checkResultado)) {
+                        // 🔹 Crear resultado
+                        $sqlResultado = "INSERT INTO resultado_subasta 
+                            (idSubasta, idUsuarioGanador, idPujaGanadora, montoFinal)
+                            VALUES ($id, {$puja->idUsuario}, {$puja->id}, {$puja->monto})";
 
-                    $idResultado = $this->enlace->executeSQL_DML_last($sqlResultado);
+                        $idResultado = $this->enlace->executeSQL_DML_last($sqlResultado);
+                        
+                        error_log("Resultado creado con ID: $idResultado");
 
-                    // 🔹 Crear pago
-                    $sqlPago = "INSERT INTO pago 
-                        (idResultado, montoPagado, idEstadoPago)
-                        VALUES ($idResultado, $puja->monto, 1)";
+                        // 🔹 Crear pago
+                        $sqlPago = "INSERT INTO pago 
+                            (idResultado, montoPagado, idEstadoPago)
+                            VALUES ($idResultado, {$puja->monto}, 1)";
 
-                    $this->enlace->executeSQL_DML($sqlPago);
+                        $this->enlace->executeSQL_DML($sqlPago);
+                        
+                        error_log("Pago creado exitosamente");
+                    } else {
+                        error_log("Ya existe un resultado para esta puja");
+                    }
+                } else {
+                    error_log("No se encontraron pujas para la subasta $id");
                 }
             }
 
@@ -429,7 +465,9 @@ class SubastaModel
         }
 
     } catch (Exception $e) {
-        error_log("Error en verificarYCerrar: " . $e->getMessage());
+        error_log("ERROR en verificarYCerrar: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        throw $e; // Relanzar para que el controller lo capture
     }
 
     return false;
