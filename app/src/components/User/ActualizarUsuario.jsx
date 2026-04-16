@@ -3,6 +3,7 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useUser } from "@/hooks/useUser";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,11 +13,13 @@ import { Save, ArrowLeft, User, Mail, ToggleLeft, Calendar, Shield } from "lucid
 import UserService from "../../services/UserService";
 import { Controller, useForm } from "react-hook-form";
 
-export function UpdateUser() {
+export function ActualizarUsuario() {
     const navigate = useNavigate();
-    const { id } = useParams();
+    const { user } = useUser();
+    const id = user?.id;
     const [error, setError] = useState("");
-    console.log("ENTRE A UPDATE USER ADMIN");
+    console.log("ENTRE A ACTUALIZAR USUARIO");
+
     const usuarioSchema = yup.object({
         nombreUsuario: yup.string().required("El nombre es requerido"),
         emailUsuario: yup.string().email("Email inválido").required("El email es requerido"),
@@ -166,30 +169,13 @@ export function UpdateUser() {
                         />
 
                         {/* Estado*/}
-                        <div className="flex flex-col gap-1.5">
-                            <Label className="text-xs font-medium tracking-widest uppercase text-[#C9A84C]/70 flex items-center gap-2">
-                                <ToggleLeft className="w-3.5 h-3.5" />
-                                Estado
-                            </Label>
-                            <Controller
-                                name="IdEstado"
-                                control={control}
-                                render={({ field }) => (
-                                    <select
-                                        {...field}
-                                        className="h-10 px-3 rounded-none border border-[#C9A84C]/20 bg-[#0D0D08] text-[#F5F0E8]"
-                                    >
-                                        <option value={1}>Activo</option>
-                                        <option value={2}>Bloqueado</option>
-                                    </select>
-                                )}
-                            />
-                            {errors.IdEstado && (
-                                <p className="text-xs text-red-400/80 tracking-wide mt-0.5">
-                                    {errors.IdEstado.message}
-                                </p>
-                            )}
-                        </div>
+                        <Field
+                            label="Estado"
+                            icon={ToggleLeft}
+                            name="descripcionEstado"
+                            readOnly
+                            placeholder="Estado"
+                        />
                     </div>
 
                     {/* Fecha de registro (solo lectura) */}

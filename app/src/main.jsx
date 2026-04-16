@@ -30,6 +30,7 @@ import { PujaTable } from './components/Pujas/ListadoPujas'
 
 import { RoleRoute } from './components/Auth/RoleRoute'
 import UserProvider from './context/UserProvider';
+import { ActualizarUsuario } from './components/User/ActualizarUsuario';
 
 const rutas = createBrowserRouter([
   {
@@ -69,6 +70,15 @@ const rutas = createBrowserRouter([
           </RoleRoute>
         )
       },
+      // Actualizar pero solo para usuario comun no editar que hace el admin
+      {
+        path: "user/profile",
+        element: (
+          <RoleRoute requiredRoles={["Administrador", "Comprador", "Vendedor"]}>
+            <ActualizarUsuario />
+          </RoleRoute>
+        )
+      },
       {
         path: "puja/listado/:id",
         element: (
@@ -100,7 +110,7 @@ const rutas = createBrowserRouter([
       {
         path: "subastas/participar/:id",
         element: (
-          <RoleRoute requiredRoles={["Administrador", "Comprador", "Vendedor"]}>
+          <RoleRoute requiredRoles={["Administrador", "Comprador"]}>
             <SubastaEnCurso />
           </RoleRoute>
         )
