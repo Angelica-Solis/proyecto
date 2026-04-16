@@ -32,4 +32,21 @@ class pago
             handleException($e);
         }
     }
+  // buscar pago por subasta
+    public function getBySubasta($idSubasta)
+{
+    try {
+        $response = new Response();
+        $model = new PagoModel();
+
+        $result = $model->getPagoBySubasta($idSubasta);
+
+        $response->toJSON([
+            "success" => true,
+            "data" => $result
+        ]);
+    } catch (Exception $e) {
+        handleException($e);
+    }
+}
 }

@@ -233,20 +233,21 @@ export function SubastaEnCurso() {
     return () => clearInterval(interval);
 }, [subasta?.fechaCierre, cerrada, id]);
 
-    useEffect(() => {
-        const cargarPago = async () => {
-            try {
-                if (subasta && (subasta.idEstadoSubasta !== '1')) {
-                    const res = await pagoService.getPagoBySubasta(id);
-                    setPago(res.data.data);
-                }
-            } catch (error) {
-                console.error(error);
+useEffect(() => {
+    const cargarPago = async () => {
+        try {
+            if (subasta && Number(subasta.idEstadoSubasta) !== 1) {
+                const res = await pagoService.getPagoBySubasta(id);
+                console.log("PAGO RESPONSE:", res.data);
+                setPago(res.data.data.data);
             }
-        };
+        } catch (error) {
+            console.error("ERROR CARGANDO PAGO:", error);
+        }
+    };
 
-        cargarPago();
-    }, [subasta, id]);
+    cargarPago();
+}, [subasta, id]);
 
     const formatearTiempo = (ms) => {
         const totalSegundos = Math.floor(ms / 1000); // Convertir milisegundos a segundos
@@ -304,7 +305,23 @@ export function SubastaEnCurso() {
     const ahora = new Date().getTime();
     const cierre = new Date(subasta.fechaCierre).getTime();
 
-    const estaFinalizada = ahora >= cierre || subasta.idEstadoSubasta !== '1';
+
+
+
+    const estaFinalizada =
+    ahora >= cierre ||
+    Number(subasta.idEstadoSubasta) !== 1;
+
+    const esGanador =
+    estaFinalizada &&
+    topBidder &&
+    user?.nombreUsuario === topBidder;
+
+    console.log("DEBUG ESTADO:");
+console.log("idEstadoSubasta:", subasta.idEstadoSubasta);
+console.log("tipo:", typeof subasta.idEstadoSubasta);
+console.log("estaFinalizada:", estaFinalizada);
+console.log("pago:", pago);
     return (
         <div
             className="min-h-screen text-[#F5F0E8]"
@@ -508,6 +525,7 @@ export function SubastaEnCurso() {
                                     value={monto}
                                     onChange={(e) => setMonto(e.target.value)}
                                     placeholder="Ingrese su monto"
+                                    disabled={estaFinalizada}
                                     className="w-full px-4 py-3 bg-[#080807] border border-[#C9A84C]/25 text-[#F5F0E8] text-lg font-light placeholder:text-[#F5F0E8]/20 focus:border-[#C9A84C]/70 focus:outline-none transition-colors duration-200 font-mono"
                                 />
                                 {/* Mensaje de Ganador - Colocar justo antes del botón */}
@@ -535,7 +553,7 @@ export function SubastaEnCurso() {
                                             Monto pagado: <strong>{fmt(pago.montoPagado)}</strong>
                                         </p>
 
-                                        {pago.idEstadoPago === 1 && (
+                                        {pago.idEstadoPago == 1 && (
                                             <button
                                                 onClick={confirmarPago}
                                                 className="mt-3 px-4 py-2 bg-green-600 text-white hover:bg-green-700 transition"

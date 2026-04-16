@@ -47,11 +47,13 @@ class PagoModel
     }
     public function getPagoBySubasta($idSubasta)
     {
-        $sql = "SELECT p.*, ep.descripcion as estado
+        $sql = "SELECT p.*, ep.descripcionPago as estado
                 FROM pago p
                 INNER JOIN resultado_subasta r ON p.idResultado = r.id
                 INNER JOIN estado_pago ep ON p.idEstadoPago = ep.id
                 WHERE r.idSubasta = $idSubasta";
+
+            
 
         $res = $this->enlace->executeSQL($sql);
         return !empty($res) ? $res[0] : null;

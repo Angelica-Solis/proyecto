@@ -9,8 +9,8 @@ class PagoService {
     get(id) {
         return axios.get(BASE_URL + '/detalle/' + id);
     }
-        getPagoBySubasta(id) {
-    return axios.get(`/pago/subasta/${id}`);
+    getPagoBySubasta(id) {
+        return axios.get(BASE_URL + '/getBySubasta/' + id);
     }
 
     confirmarPago(idPago) {

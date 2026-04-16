@@ -7,7 +7,7 @@ class UserService {
     return axios.get(BASE_URL + '/RolEstadoUsuarios/');
   }
   getUserById(id) {
-    return axios.get(`user/${id}`);
+    return axios.get(BASE_URL + '/' + id);
   }
   getAllCustomer() {
     return axios.get(BASE_URL + '/allCustomer/');

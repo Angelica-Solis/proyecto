@@ -36,10 +36,11 @@ export function CreateObjeto() {
     const [error, setError] = useState("");
     const [fileURL, setFileURL] = useState(null);
     const { user } = useUser();
+    console.log("🔵 USER GLOBAL:", user);
     const [vendedor, setVendedor] = useState({ id: 0, nombre: "" });
     const [categoriasOpciones, setCategoriasOpciones] = useState([]);
     const [condicionOpciones, setCondicionOpciones] = useState([]);
-    const usuarioActual = user?.id;
+    const usuarioActual = Number(user?.id);
 
     /*** Esquema de validación Yup ***/
     const objetoSchema = yup.object({
@@ -146,10 +147,22 @@ export function CreateObjeto() {
 
         const fetchVendedor = async () => {
             try {
-                const res = await userService.getUserById(usuarioActual);
-                setVendedor(res.data.data);
+                console.log("🟣 ID enviado:", usuarioActual);
 
-                setValue("idVendedor", parseInt(res.data.data.id));
+                const res = await userService.getUserById(usuarioActual);
+
+                console.log("🟢 USER RESPONSE:", res);
+
+                const data = res?.data?.data;
+
+                if (!data) {
+                    console.error("Respuesta inválida:", res);
+                    return;
+                }
+
+                setVendedor(data);
+                setValue("idVendedor", Number(data.id));
+
             } catch (err) {
                 console.error("Error al cargar vendedor:", err);
             }
@@ -157,7 +170,6 @@ export function CreateObjeto() {
 
         fetchVendedor();
     }, [usuarioActual, setValue]);
-
     /*** Submit ***/
     const onSubmit = async (dataForm) => {
         console.log("onSubmit disparado", dataForm);
