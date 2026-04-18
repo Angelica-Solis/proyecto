@@ -187,7 +187,7 @@ export function SubastaEnCurso() {
     try {
         procesandoCierre.current = true;
         const response = await subastaService.getDetalle(id);
-        setSubasta(response.data.data.data);
+        setSubasta(response.data.data);
         setCerrada(true);
         toast.success("Subasta finalizada");
     } catch (error) {
