@@ -49,4 +49,19 @@ class pago
         handleException($e);
     }
 }
+
+public function confirmarPago($idPago)
+{
+    try {
+        $response = new Response();
+        $model = new PagoModel();
+        $result = $model->confirmarPago($idPago);
+        $response->toJSON([
+            "success" => $result,
+            "message" => $result ? "Pago confirmado" : "No se pudo confirmar"
+        ]);
+    } catch (Exception $e) {
+        handleException($e);
+    }
+}
 }
