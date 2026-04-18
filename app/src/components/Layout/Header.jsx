@@ -15,6 +15,8 @@ import {
   Gavel,
   CarFront,
   ShieldCheck,
+  Coins,
+  CoinsIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,6 +30,7 @@ import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { useUser } from "@/hooks/useUser";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Card } from "../ui/card";
 
 //Paleta dorada 
 const G = {
@@ -69,6 +72,7 @@ export default function Header() {
   const mantItems = [
     { title: "Listar Usuarios", href: "/user/table", icon: <UsersRound className="h-4 w-4" /> },
     { title: "Listado de Objetos", href: "/objeto/listado", icon: <CarFront className="h-4 w-4" /> },
+    { title: "Pagos", href: "/pagos", icon: <CoinsIcon className="h-4 w-4" /> },
     { title: "Gráfico de Alquileres", href: "/rental/graph", icon: <ChartArea className="h-4 w-4" /> },
   ];
   const mantenimientoItems = [

@@ -1,8 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Crown, Clock, TrendingUp, User, Gavel, ChevronLeft, ChevronRight, History } from "lucide-react";
+import { ArrowLeft, Crown, Clock, TrendingUp, User, Gavel, ChevronLeft, ChevronRight, History, CreditCard } from "lucide-react";
 import subastaService from "@/services/SubastaService";
-import pagoService from "@/services/PagoService";
 import pujaService from "@/services/PujaService";
 import { toast } from "sonner";
 import Pusher from "pusher-js";
@@ -84,7 +83,6 @@ export function SubastaEnCurso() {
     const [loading, setLoading] = useState(true);
     const [monto, setMonto] = useState("");
     const [loadingPuja, setLoadingPuja] = useState(false);
-    const [pago, setPago] = useState(null);
     const [cerrada, setCerrada] = useState(false);
     const { user } = useUser();
     const procesandoCierre = useRef(false); // Variable booleana persistente para evitar múltiples ejecuciones del cierre de subasta
@@ -189,7 +187,7 @@ export function SubastaEnCurso() {
     try {
         procesandoCierre.current = true;
         const response = await subastaService.getDetalle(id);
-        setSubasta(response.data.data);
+        setSubasta(response.data.data.data);
         setCerrada(true);
         toast.success("Subasta finalizada");
     } catch (error) {
@@ -233,21 +231,8 @@ export function SubastaEnCurso() {
     return () => clearInterval(interval);
 }, [subasta?.fechaCierre, cerrada, id]);
 
-useEffect(() => {
-    const cargarPago = async () => {
-        try {
-            if (subasta && Number(subasta.idEstadoSubasta) !== 1) {
-                const res = await pagoService.getPagoBySubasta(id);
-                console.log("PAGO RESPONSE:", res.data);
-                setPago(res.data.data.data);
-            }
-        } catch (error) {
-            console.error("ERROR CARGANDO PAGO:", error);
-        }
-    };
 
-    cargarPago();
-}, [subasta, id]);
+
 
     const formatearTiempo = (ms) => {
         const totalSegundos = Math.floor(ms / 1000); // Convertir milisegundos a segundos
@@ -261,19 +246,8 @@ useEffect(() => {
 
 
 
-    const confirmarPago = async () => {
-        try {
-            await pagoService.confirmarPago(pago.id);
 
-            const res = await pagoService.getPagoBySubasta(id);
-            setPago(res.data.data);
 
-            toast.success("Pago confirmado");
-        } catch (error) {
-            console.error(error);
-            toast.error("Error al confirmar pago");
-        }
-    };
 
     if (loading) return (
         <div className="min-h-screen bg-[#080807] flex items-center justify-center">
@@ -317,11 +291,8 @@ useEffect(() => {
     topBidder &&
     user?.nombreUsuario === topBidder;
 
-    console.log("DEBUG ESTADO:");
-console.log("idEstadoSubasta:", subasta.idEstadoSubasta);
-console.log("tipo:", typeof subasta.idEstadoSubasta);
-console.log("estaFinalizada:", estaFinalizada);
-console.log("pago:", pago);
+
+
     return (
         <div
             className="min-h-screen text-[#F5F0E8]"
@@ -528,9 +499,10 @@ console.log("pago:", pago);
                                     disabled={estaFinalizada}
                                     className="w-full px-4 py-3 bg-[#080807] border border-[#C9A84C]/25 text-[#F5F0E8] text-lg font-light placeholder:text-[#F5F0E8]/20 focus:border-[#C9A84C]/70 focus:outline-none transition-colors duration-200 font-mono"
                                 />
-                                {/* Mensaje de Ganador - Colocar justo antes del botón */}
+
+                                {/* Mensaje de ganador oficial */}
                                 {estaFinalizada && topBidder && (
-                                    <div className="mb-6 p-4 border border-green-500/30 bg-green-500/5 rounded-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
+                                    <div className="p-4 border border-green-500/30 bg-green-500/5 animate-in fade-in slide-in-from-bottom-2 duration-700">
                                         <div className="flex flex-col items-center gap-2">
                                             <Crown className="w-6 h-6 text-green-500 animate-pulse" />
                                             <p className="text-[10px] tracking-[0.3em] uppercase text-green-500/70 font-semibold">
@@ -543,42 +515,30 @@ console.log("pago:", pago);
                                     </div>
                                 )}
 
-                                {estaFinalizada && pago && (
-                                    <div className="mb-4 p-4 border border-blue-500/30 bg-blue-500/5 rounded-sm">
-                                        <p className="text-sm text-blue-300">
-                                            Estado del pago: <strong>{pago.estado}</strong>
-                                        </p>
-
-                                        <p className="text-sm text-blue-300">
-                                            Monto pagado: <strong>{fmt(pago.montoPagado)}</strong>
-                                        </p>
-
-                                        {pago.idEstadoPago == 1 && (
-                                            <button
-                                                onClick={confirmarPago}
-                                                className="mt-3 px-4 py-2 bg-green-600 text-white hover:bg-green-700 transition"
-                                            >
-                                                Confirmar Pago
-                                            </button>
-                                        )}
-                                    </div>
+                                {/* Botón ir a pagar — solo visible para el ganador */}
+                                {esGanador && (
+                                    <button
+                                        onClick={() => navigate("/pagos")}
+                                        className="relative group w-full overflow-hidden flex items-center justify-center gap-3 py-3.5 border font-bold text-[11px] tracking-[0.4em] uppercase transition-all duration-300 bg-gradient-to-r from-[#C9A84C] via-[#E2C36A] to-[#C9A84C] border-[#C9A84C] text-[#080807] hover:shadow-[0_0_35px_rgba(201,168,76,0.5)] hover:scale-[1.01] active:scale-[0.98]"
+                                    >
+                                        <span className="absolute inset-0 translate-x-[-110%] group-hover:translate-x-[110%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-20deg]" />
+                                        <CreditCard className="w-4 h-4 shrink-0" />
+                                        <span>Ir a Pagar</span>
+                                    </button>
                                 )}
 
-                                {/* Botón de puja que esta habilitado o no segun el estado de la subasta */}
-                                <button
-                                    onClick={handleRealizarPuja}
-                                    disabled={loadingPuja || estaFinalizada}
-                                    className={`relative group w-full overflow-hidden flex items-center justify-center gap-3 py-3.5 
-                                border font-bold text-[11px] tracking-[0.4em] uppercase transition-all duration-300
-                                ${estaFinalizada
-                                            ? "bg-gray-500 border-gray-500 text-gray-300 cursor-not-allowed opacity-50"
-                                            : "bg-gradient-to-r from-[#C9A84C] via-[#E2C36A] to-[#C9A84C] border-[#C9A84C] text-[#080807] hover:shadow-[0_0_35px_rgba(201,168,76,0.5)] hover:scale-[1.01] active:scale-[0.98]"
-                                        }`}
-                                >
-                                    <span className="absolute inset-0 translate-x-[-110%] group-hover:translate-x-[110%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-20deg]" />
-                                    <Gavel className={`w-4 h-4 shrink-0 ${loadingPuja ? 'animate-bounce' : ''}`} />
-                                    <span>{loadingPuja ? "Procesando..." : "Confirmar Puja"}</span>
-                                </button>
+                                {/* Botón de puja — deshabilitado al finalizar */}
+                                {!estaFinalizada && (
+                                    <button
+                                        onClick={handleRealizarPuja}
+                                        disabled={loadingPuja}
+                                        className="relative group w-full overflow-hidden flex items-center justify-center gap-3 py-3.5 border font-bold text-[11px] tracking-[0.4em] uppercase transition-all duration-300 bg-gradient-to-r from-[#C9A84C] via-[#E2C36A] to-[#C9A84C] border-[#C9A84C] text-[#080807] hover:shadow-[0_0_35px_rgba(201,168,76,0.5)] hover:scale-[1.01] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        <span className="absolute inset-0 translate-x-[-110%] group-hover:translate-x-[110%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-20deg]" />
+                                        <Gavel className={`w-4 h-4 shrink-0 ${loadingPuja ? "animate-bounce" : ""}`} />
+                                        <span>{loadingPuja ? "Procesando..." : "Confirmar Puja"}</span>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

@@ -32,6 +32,7 @@ import { RoleRoute } from './components/Auth/RoleRoute'
 import UserProvider from './context/UserProvider';
 import { ActualizarUsuario } from './components/User/ActualizarUsuario';
 import { Historial } from './components/User/MostrarHistorial';
+import { PagosPendientes } from './components/Pago/PagosPendientes';
 
 const rutas = createBrowserRouter([
   {
@@ -103,6 +104,15 @@ const rutas = createBrowserRouter([
         element: (
           <RoleRoute requiredRoles={["Administrador", "Vendedor"]}>
             <CrearSubasta />
+          </RoleRoute>
+        )
+      },
+      // admin y comprador
+      {
+        path: "/pagos",
+        element: (
+          <RoleRoute requiredRoles={["Administrador", "Comprador"]}>
+            <PagosPendientes />
           </RoleRoute>
         )
       },

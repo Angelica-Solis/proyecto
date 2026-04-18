@@ -124,7 +124,7 @@ class SubastaModel
             // 6. Si la subasta está finalizada, traemos el resultado y pago
             if ($vResultado->idEstadoSubasta == 2) {
                 try {
-                    $sqlPago = "SELECT p.*, rs.montoFinal, rs.idUsuarioGanador 
+                    $sqlPago = "SELECT p.*, rs.montoFinal, rs.id, rs.idUsuarioGanador 
                                 FROM pago p 
                                 JOIN resultado_subasta rs ON p.idResultado = rs.id 
                                 WHERE rs.idSubasta = $id 
@@ -157,7 +157,7 @@ class SubastaModel
         $vSql = "SELECT monto, fechaHora, idUsuario 
             FROM puja 
             WHERE idSubasta = $idSubasta 
-            ORDER BY monto DESC;";
+            ORDER BY monto ASC;";
 
         $vResultado = $this->enlace->executeSQL($vSql);
 
