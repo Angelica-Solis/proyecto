@@ -161,11 +161,17 @@ class subasta
             $response = new Response();
             $inputJSON = $request->getJSON();
             $subastaM = new SubastaModel();
+            error_log("DEBUG createPuja: " . json_encode($inputJSON));
+            error_log("DEBUG tipo: " . gettype($inputJSON));
+            error_log("DEBUG idSubasta: " . var_export($inputJSON->idSubasta ?? 'NO EXISTE', true));
+            error_log("DEBUG monto: " . var_export($inputJSON->monto ?? 'NO EXISTE', true));
+            error_log("DEBUG idUsuario: " . var_export($inputJSON->idUsuario ?? 'NO EXISTE', true));
+
 
             // Validar datos básicos
-            if (empty($inputJSON->idSubasta) || empty($inputJSON->monto) || empty($inputJSON->idUsuario)) {
-                throw new Exception("Datos incompletos para realizar la puja");
-            }
+            if ($inputJSON->idSubasta === "" || $inputJSON->monto === "" || $inputJSON->idUsuario === "") {
+            throw new Exception("Datos incompletos para realizar la puja");
+}
 
             $usuarioActual = $inputJSON->idUsuario;
 

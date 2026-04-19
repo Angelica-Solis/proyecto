@@ -164,6 +164,7 @@ export function SubastaEnCurso() {
                 monto: parseFloat(monto),
                 idUsuario: user.id
             });
+            console.log("Respuesta de la puja:", res.data);
 
             const response = await subastaService.getDetalle(id);
             setSubasta(response.data.data);
@@ -494,7 +495,7 @@ export function SubastaEnCurso() {
                                 <input
                                     type="number"
                                     value={monto}
-                                    onChange={(e) => setMonto(e.target.value)}
+                                    onChange={(e) => setMonto(e.target.value)} 
                                     placeholder="Ingrese su monto"
                                     disabled={estaFinalizada}
                                     className="w-full px-4 py-3 bg-[#080807] border border-[#C9A84C]/25 text-[#F5F0E8] text-lg font-light placeholder:text-[#F5F0E8]/20 focus:border-[#C9A84C]/70 focus:outline-none transition-colors duration-200 font-mono"
@@ -530,7 +531,7 @@ export function SubastaEnCurso() {
                                 {/* Botón de puja — deshabilitado al finalizar */}
                                 {!estaFinalizada && (
                                     <button
-                                        onClick={handleRealizarPuja}
+                                        onClick={handleRealizarPuja} 
                                         disabled={loadingPuja}
                                         className="relative group w-full overflow-hidden flex items-center justify-center gap-3 py-3.5 border font-bold text-[11px] tracking-[0.4em] uppercase transition-all duration-300 bg-gradient-to-r from-[#C9A84C] via-[#E2C36A] to-[#C9A84C] border-[#C9A84C] text-[#080807] hover:shadow-[0_0_35px_rgba(201,168,76,0.5)] hover:scale-[1.01] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
                                     >

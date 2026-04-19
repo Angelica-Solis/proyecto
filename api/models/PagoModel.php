@@ -42,7 +42,6 @@ class PagoModel
         $sql = "UPDATE pago 
                 SET idEstadoPago = 2, fechaPago = NOW() 
                 WHERE id = $idPago";
-
         return $this->enlace->executeSQL_DML($sql);
     }
     public function getPagoBySubasta($idSubasta)
