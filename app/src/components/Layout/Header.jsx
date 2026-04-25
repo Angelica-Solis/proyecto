@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Coins,
   CoinsIcon,
+  FileTextIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -73,7 +74,7 @@ export default function Header() {
     { title: "Listar Usuarios", href: "/user/table", icon: <UsersRound className="h-4 w-4" /> },
     { title: "Listado de Objetos", href: "/objeto/listado", icon: <CarFront className="h-4 w-4" /> },
     { title: "Pagos", href: "/pagos", icon: <CoinsIcon className="h-4 w-4" /> },
-    { title: "Gráfico de Alquileres", href: "/rental/graph", icon: <ChartArea className="h-4 w-4" /> },
+    { title: "Reporte de Subastas", href: "/subasta/reporte", icon: <FileTextIcon className="h-4 w-4" /> },
   ];
   const mantenimientoItems = [
     { title: "Mantenimiento de Subastas", href: "/mantenimiento/subastas", icon: <Gavel className="h-4 w-4" /> },

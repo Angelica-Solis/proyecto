@@ -228,4 +228,25 @@ class subasta
             handleException($e);
         }
     }
+
+
+    public function getSubastasPorEstado()
+{
+    try {
+        $model = new SubastaModel();
+        $data = $model->getSubastasPorEstado();
+
+        $response = [
+            "success" => true,
+            "data" => $data
+        ];
+
+        echo json_encode($response);
+    } catch (Exception $e) {
+        echo json_encode([
+            "success" => false,
+            "message" => $e->getMessage()
+        ]);
+    }
+}
 }

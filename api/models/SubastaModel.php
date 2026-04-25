@@ -472,4 +472,23 @@ class SubastaModel
 
     return false;
 }
+public function getSubastasPorEstado()
+{
+    try {
+    $sql = "
+        SELECT 
+            idEstadoSubasta,
+            COUNT(*) as total
+        FROM subasta
+        GROUP BY idEstadoSubasta
+    ";
+
+    return $this->enlace->executeSQL($sql);
+
+    } catch (Exception $e) {
+        error_log("ERROR en getSubastasPorEstado: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        throw $e; // Relanzar para que el controller lo capture
+}
+}
 }

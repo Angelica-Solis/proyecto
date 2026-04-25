@@ -38,6 +38,10 @@ class SubastaService {
     cancelar(id) {
         return axios.get(BASE_URL + '/cancelar/' + id);
     }
+
+    getSubastasPorEstado = () => {
+        return axios.get(`${BASE_URL}/getSubastasPorEstado`);
+};
 }
 
 export default new SubastaService();
