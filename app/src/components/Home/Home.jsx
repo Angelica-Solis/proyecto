@@ -253,7 +253,7 @@ export function Home() {
             fontSize: "clamp(100px,16vw,210px)", fontWeight: 300, fontStyle: "italic",
             color: "transparent", WebkitTextStroke: `1px rgba(201,168,76,0.07)`,
             lineHeight: 1, pointerEvents: "none", userSelect: "none",
-          }}>2025</div>
+          }}>2026</div>
 
           {/* Label del lado izquierdo del inicio*/}
           <div style={{
@@ -262,7 +262,7 @@ export function Home() {
             fontFamily: "'Montserrat', sans-serif", fontWeight: 300,
             fontSize: 8, letterSpacing: "0.4em", color: G.goldDim,
             textTransform: "uppercase", whiteSpace: "nowrap",
-          }}>Est. 2009 · Subastas Exclusivas</div>
+          }}>Est. 2026 · Subastas Exclusivas</div>
 
           {/* Contenido */}
           <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 8% 0 10%" }}>
@@ -274,7 +274,7 @@ export function Home() {
             }}>
               <div style={{ width: 36, height: 1, background: G.gold }} />
               <span style={{ fontSize: 8, fontWeight: 400, letterSpacing: "0.45em", color: G.gold, textTransform: "uppercase" }}>
-                Subasta Primavera · 15 de Abril, 2025
+                Subasta Primavera · 15 de Abril, 2026
               </span>
               <span style={{
                 width: 6, height: 6, borderRadius: "50%", background: G.gold,
