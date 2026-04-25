@@ -14,7 +14,7 @@ class PagoService {
     }
 
     confirmarPago(idPago) {
-        return axios.get(BASE_URL + `/confirmarPago/${idPago}`);
+        return axios.get(BASE_URL + `/confirmarPago/${Number(idPago)-1}`);
     }
 };
 export default new PagoService();

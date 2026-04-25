@@ -112,6 +112,9 @@ export function PagosPendientes() {
         setProcesando(subasta.id);
         try {
             await pagoService.confirmarPago(idPago);
+            console.log("subasta.pago completo:", subasta.pago);4
+                console.log("idPago:", idPago);
+
             toast.success("Pago confirmado exitosamente");
             await cargarDatos();
         } catch (error) {
